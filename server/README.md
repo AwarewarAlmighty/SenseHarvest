@@ -1,4 +1,5 @@
 # Notes!
 
 1. Jangan lupa `npm i`
-2. Jangan lupa configure `.env` buat ganti port sama mongodb
+2. Jangan lupa configure `.env` buat ganti port sama MongoDB
+3. Buat start, gunakan `npm start`

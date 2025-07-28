@@ -1,38 +1,46 @@
-// pages/login.jsx
 import React, { useState } from "react";
-import { useAuth } from "../context/AuthContext"; // Import useAuth hook
+import { useAuth } from "../context/AuthContext"; // Make sure this path is correct relative to login.jsx
 
 function Login() {
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState(""); // Use email as per your backend auth route
   const [password, setPassword] = useState("");
-  const { login } = useAuth(); // Get the login function from context
+  const [error, setError] = useState("");
+  const { login } = useAuth();
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    // In a real application, you would send these credentials to your Express.js backend
-    // and receive a token (e.g., JWT) upon successful authentication.
-    console.log("Attempting login with:", { username, password });
+    setError(""); // Clear any previous errors
 
     try {
-      // Example: Replace with actual API call to your Express.js backend
-      // const response = await fetch('/api/login', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ username, password }),
-      // });
-      // const data = await response.json();
+      // IMPORTANT: Replace 'http://localhost:1234' with your actual backend URL
+      // if it's deployed or running on a different port/domain.
+      const response = await fetch("http://localhost:1234/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }), // Send email and password to backend
+      });
 
-      // For demonstration, simulate a successful login after a short delay
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const data = await response.json(); // Parse the JSON response from the backend
 
-      // If login is successful (e.g., you get a token from your backend)
-      const mockToken = `mock-jwt-token-for-${username}`; // Replace with actual token from backend
-      login(mockToken); // Call the login function from AuthContext
-    } catch (error) {
-      console.error("Login failed:", error);
-      // Handle login error (e.g., display error message to user)
-      alert("Login failed. Please check your credentials."); // Use a custom modal in production!
+      if (response.ok) {
+        // Check if the HTTP status code is in the 200-299 range
+        login(data.token); // Call login function from AuthContext with the received JWT
+        // The AuthContext's login function will handle the redirection to the home page ('/')
+      } else {
+        // If backend returns an error (e.g., 401 Unauthorized), display its message
+        setError(
+          data.message || "Login failed. Please check your credentials."
+        );
+        console.error("Login error from backend:", data.message);
+      }
+    } catch (err) {
+      // Catch network errors or other issues during the fetch operation
+      setError(
+        "Could not connect to the server. Please check your network connection and server status."
+      );
+      console.error("Network or fetch error:", err);
     }
   };
 
@@ -45,19 +53,19 @@ function Login() {
         <form onSubmit={handleSubmit}>
           <div className="mb-4">
             <label
-              htmlFor="username"
+              htmlFor="email"
               className="block text-gray-700 text-sm font-bold mb-2"
             >
-              Username:
+              Email:
             </label>
             <input
-              type="text"
-              id="username"
-              name="username"
+              type="email"
+              id="email"
+              name="email"
               className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-              placeholder="Enter your username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
               required
             />
           </div>
@@ -79,6 +87,7 @@ function Login() {
               required
             />
           </div>
+          {error && <p className="text-red-500 text-xs italic mb-4">{error}</p>}
           <div className="flex items-center justify-between">
             <button
               type="submit"
@@ -88,6 +97,13 @@ function Login() {
             </button>
           </div>
         </form>
+        {/* Optional: Add a link to a registration page if you create one */}
+        <p className="mt-4 text-center text-sm text-gray-600">
+          Don't have an account?{" "}
+          <a href="/register" className="text-blue-500 hover:underline">
+            Register here
+          </a>
+        </p>
       </div>
     </div>
   );
