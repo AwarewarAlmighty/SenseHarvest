@@ -14,9 +14,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useAuth } from "../context/AuthContext"; // Import useAuth hook
 
 const Home = () => {
-  // Mock user data
+  const { logout } = useAuth(); // Get the logout function from context
+
+  // Mock user data (you might fetch this from your backend after login)
   const user = {
     name: "John Farmer",
     email: "john@farmtech.com",
@@ -89,7 +92,9 @@ const Home = () => {
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>Profile</DropdownMenuItem>
                 <DropdownMenuItem>Account Settings</DropdownMenuItem>
-                <DropdownMenuItem className="text-red-500">
+                <DropdownMenuItem className="text-red-500" onClick={logout}>
+                  {" "}
+                  {/* Add onClick handler */}
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -110,6 +115,7 @@ const Home = () => {
 
         {/* Sensor Status Grid */}
         <div className="mb-8">
+          {/* Ensure SensorStatusGrid is imported and defined */}
           <SensorStatusGrid />
         </div>
 
@@ -117,6 +123,7 @@ const Home = () => {
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Data Visualization - Takes 2/3 of the screen on large devices */}
           <div className="lg:col-span-2">
+            {/* Ensure DataVisualization is imported and defined */}
             <DataVisualization />
           </div>
 
@@ -126,12 +133,14 @@ const Home = () => {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-medium mb-4">Notifications</h3>
+                {/* Ensure NotificationCenter is imported and defined */}
                 <NotificationCenter />
               </CardContent>
             </Card>
 
             {/* AI Chatbot */}
             <div className="flex justify-center">
+              {/* Ensure AIChatbot is imported and defined */}
               <AIChatbot />
             </div>
           </div>
