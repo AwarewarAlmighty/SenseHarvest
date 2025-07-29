@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Send, Bot, User, Loader2 } from "lucide-react";
+import { Send, Bot, User, Loader2, BrainCircuit } from "lucide-react";
 import {
   Sheet,
   SheetContent,
@@ -21,17 +21,20 @@ interface Message {
 }
 
 interface AIChatbotProps {
-  onSendMessage?: (message: string) => Promise<string>;
+  onSendMessage?: (message: string, mode: "chatbot" | "analysis") => Promise<string>;
   suggestedQueries?: string[];
   isLoading?: boolean;
   trigger?: React.ReactNode;
 }
 
 const AIChatbot = ({
-  onSendMessage = async (message) => {
+  onSendMessage = async (message, mode) => {
     // Mock response for demonstration
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    return `This is a mock response to: "${message}". In a real implementation, this would be handled by the Gemini API.`;
+    if (mode === "chatbot") {
+      return `This is a mock response from Elice ML API Helpy-V to: "${message}".`;
+    }
+    return `This is a mock analysis from Gemini API for: "${message}".`;
   },
   suggestedQueries = [
     "What's the ideal soil moisture for tomatoes?",
@@ -57,6 +60,7 @@ const AIChatbot = ({
   ]);
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(isLoading);
+  const [mode, setMode] = useState<"chatbot" | "analysis">("chatbot");
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
@@ -73,7 +77,7 @@ const AIChatbot = ({
     setLoading(true);
 
     try {
-      const response = await onSendMessage(inputValue);
+      const response = await onSendMessage(inputValue, mode);
 
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -117,9 +121,28 @@ const AIChatbot = ({
         className="w-[400px] sm:w-[500px] flex flex-col p-0"
       >
         <SheetHeader className="p-6 pb-2">
-          <SheetTitle className="text-lg flex items-center gap-2">
-            <Bot className="h-5 w-5" />
-            Farm Assistant
+          <SheetTitle className="text-lg flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Bot className="h-5 w-5" />
+              Farm Assistant
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setMode(mode === "chatbot" ? "analysis" : "chatbot")}
+            >
+              {mode === "chatbot" ? (
+                <>
+                  <Bot className="h-4 w-4 mr-2" />
+                  Chatbot Mode
+                </>
+              ) : (
+                <>
+                  <BrainCircuit className="h-4 w-4 mr-2" />
+                  Analysis Mode
+                </>
+              )}
+            </Button>
           </SheetTitle>
         </SheetHeader>
 
@@ -128,10 +151,14 @@ const AIChatbot = ({
             {messages.map((message) => (
               <div
                 key={message.id}
-                className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}
+                className={`flex ${
+                  message.sender === "user" ? "justify-end" : "justify-start"
+                }`}
               >
                 <div
-                  className={`flex gap-2 max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : ""}`}
+                  className={`flex gap-2 max-w-[80%] ${
+                    message.sender === "user" ? "flex-row-reverse" : ""
+                  }`}
                 >
                   <Avatar className="h-8 w-8">
                     {message.sender === "user" ? (

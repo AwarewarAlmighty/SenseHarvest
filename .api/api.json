@@ -1,0 +1,11 @@
+{
+  "version": "1.0",
+  "apis": [
+    {
+      "identifier": "elice-ai",
+      "source": "@elice-ai/v1.0#1g9n3z1cmdihm9b0",
+      "integrity": "sha512-UUJyowiCSvCiQMfGxF+tFCHlaDjCKRrMbwRlZ6ynOuKUJ9knAXN/V7Q0ZDM82g+KTkz0QWEXwyn+FsPcr1A4oA==",
+      "installerVersion": "6.1.3"
+    }
+  ]
+}

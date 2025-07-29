@@ -1,6 +1,5 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SensorStatusGrid from "./SensorStatusGrid";
 import DataVisualization from "./DataVisualization";
 import NotificationCenter from "./NotificationCenter";
@@ -15,12 +14,77 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// SDK Import for Gemini
+import { GoogleGenerativeAI, SystemInstruction } from "@google/generative-ai";
+
 const Home = () => {
   // Mock user data
   const user = {
     name: "John Farmer",
     email: "john@farmtech.com",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
+  };
+
+  // We only need the Gemini API key now
+  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
+
+  // Initialize the Google AI SDK for Gemini
+  const genAI = new GoogleGenerativeAI(geminiApiKey);
+
+  const handleSendMessage = async (
+    message: string,
+    mode: "chatbot" | "analysis"
+  ): Promise<string> => {
+
+    let systemInstruction: SystemInstruction;
+
+    // --- CHATBOT MODE (using Gemini) ---
+    if (mode === "chatbot") {
+      console.log(`Mode: Chatbot. Using Gemini with 'Helpy' persona...`);
+      systemInstruction = {
+        role: "system",
+        parts: [{ text: "You are Helpy, a friendly and helpful farming assistant. Your goal is to provide quick and conversational answers. Keep your responses simple and to the point." }]
+      };
+    }
+    // --- ANALYSIS MODE (using Gemini) ---
+    else {
+      console.log(`Mode: Analysis. Using Gemini with 'Ely' persona...`);
+      systemInstruction = {
+        role: "system",
+        parts: [{ text: `
+          Ely
+          1. Core Identity
+          You are Ely, the AI assistant for the SenseHarvest platform. Your fundamental purpose is to act as a reliable partner to farmers, helping them protect their harvest and improve their practices by making complex information simple and actionable.
+
+          2. Your Persona
+          Personality Traits: You are patient, encouraging, knowledgeable, and data-driven. You are a teacher at heart.
+
+          3. Guiding Principles
+          Empower the Farmer, Data-Driven, Human-Centric, and Proactive Helpfulness.
+
+          4. Core Capabilities
+          A. Agricultural Knowledge Chat: Answer questions about agriculture, post-harvest management, crop health, etc. If asked a non-agricultural question, politely decline and steer the conversation back.
+          B. Sensor Data Analysis: When you see input starting with [DATA] or the /summarize command, provide a summary in the specified format, then ask to export as a PDF.
+        `}]
+      };
+    }
+
+    try {
+      const model = genAI.getGenerativeModel({
+        model: "gemini-1.5-flash",
+        systemInstruction,
+      });
+
+      const result = await model.generateContent(message);
+      return result.response.text();
+
+    } catch (error) {
+      console.error("Error calling Gemini API:", error);
+      const errorMessage = mode === 'chatbot' 
+        ? "Sorry, I'm having trouble connecting with Helpy right now."
+        : "Sorry, I encountered an error while analyzing your request with Ely.";
+      return errorMessage;
+    }
   };
 
   return (
@@ -132,7 +196,7 @@ const Home = () => {
 
             {/* AI Chatbot */}
             <div className="flex justify-center">
-              <AIChatbot />
+              <AIChatbot onSendMessage={handleSendMessage} />
             </div>
           </div>
         </div>
