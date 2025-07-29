@@ -1,8 +1,11 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-import { connectDB } from "./config/db.js";
-import { initializeAuth } from "./betterAuth.js";
+import passport from "passport";
+import jwt from "jsonwebtoken";
+import bcrypt from "bcryptjs";
+import { connectDB, getConnection } from "./config/db.js";
+import { initializePassport } from "./auth.js";
 
 dotenv.config();
 
@@ -11,27 +14,63 @@ const PORT = process.env.PORT || 3000;
 
 async function startServer() {
     await connectDB();
+    initializePassport();
 
-    const { auth, toNodeHandler } = initializeAuth();
-
-    app.use(express.json());
     app.use(cors());
+    app.use(express.json());
+    app.use(passport.initialize());
 
-    app.use("/api/auth", toNodeHandler(auth));
+    // --- Authentication Routes ---
 
-    app.get("/", (req, res) => {
-        res.send("Hello Express! This is the backend of Harvest Moon.");
+    // REGISTRATION ROUTE
+    app.post("/api/auth/register", async (req, res) => {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: "Email and password are required." });
+        }
+        try {
+            const db = getConnection();
+            const users = db.collection('users');
+            const existingUser = await users.findOne({ email });
+            if (existingUser) {
+                return res.status(400).json({ message: "User already exists." });
+            }
+            const hashedPassword = await bcrypt.hash(password, 10);
+            await users.insertOne({ email, password: hashedPassword });
+            res.status(201).json({ message: "User created successfully" });
+        } catch (err) {
+            res.status(500).json({ message: "Server error during registration." });
+        }
     });
 
-    // Error handling middleware (optional, but good practice)
-    app.use((err, req, res, next) => {
-        console.error(err.stack);
-        res.status(500).send("Something broke!");
+    // LOGIN ROUTE
+    app.post("/api/auth/login", (req, res, next) => {
+        passport.authenticate('local', { session: false }, (err, user, info) => {
+            if (err || !user) {
+                return res.status(400).json({
+                    message: info ? info.message : 'Login failed'
+                });
+            }
+            req.login(user, { session: false }, (err) => {
+                if (err) {
+                    res.send(err);
+                }
+                const payload = { id: user._id, email: user.email };
+                const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1d' });
+                return res.json({ token });
+            });
+        })(req, res, next);
     });
+
+    // GET USER DATA ROUTE (/me)
+    app.get("/api/auth/me", passport.authenticate('jwt', { session: false }), (req, res) => {
+        const { password, ...userWithoutPassword } = req.user;
+        res.json(userWithoutPassword);
+    });
+
 
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);
-        console.log(`JWT Secret Loaded: ${!!process.env.JWT_SECRET}`);
     });
 }
 

@@ -31,13 +31,9 @@ function Login() {
         login(data.token);
       } else {
         setError(data.message || "Login failed. Please check your credentials.");
-        console.error("Login error from backend:", data.message);
       }
     } catch (err) {
-      setError(
-        "Could not connect to the server. Please check your network connection and server status."
-      );
-      console.error("Network or fetch error:", err);
+      setError("Could not connect to the server. Please check your network and server status.");
     }
   };
 
@@ -55,46 +51,21 @@ function Login() {
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="m@example.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                />
+                <Input id="email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                />
+                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
-              <Button type="submit" className="w-full">
-                Sign in
-              </Button>
+              <Button type="submit" className="w-full">Sign in</Button>
             </div>
           </form>
           <div className="mt-4 text-center text-sm">
             Don't have an account?{" "}
-            <Link to="/register" className="underline">
-              Sign up
-            </Link>
+            <Link to="/register" className="underline">Sign up</Link>
           </div>
         </CardContent>
-        <CardFooter>
-          <div className="text-center text-sm w-full">
-            Built with{" "}
-            <a href="https://better-auth.com" className="underline">
-              Better-Auth
-            </a>
-          </div>
-        </CardFooter>
       </Card>
     </div>
   );

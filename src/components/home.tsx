@@ -13,62 +13,27 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from "../context/AuthContext"; // Import useAuth hook
-
-// SDK Import for Gemini
 import { GoogleGenerativeAI, SystemInstruction } from "@google/generative-ai";
+import { useAuth } from "../context/AuthContext"; // Import the useAuth hook for Passport.js
 
 const Home = () => {
-  const { logout, user } = useAuth(); // Get logout and the user object from context
+  const { user, logout } = useAuth(); // Get user and logout function from our context
 
-  // Use the user data from context, or fallback to a default if not available
-  // 'user' from useAuth() will contain the decoded JWT payload (userId, username, email, etc.)
-  const displayUser = user || {
-    username: "Guest", // Fallback username
-    email: "guest@example.com", // Fallback email
-    // You can generate a dynamic avatar URL based on the username/email
-    // This URL will be used if 'user' from context is null (e.g., if somehow not authenticated)
-    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=guest",
-  };
-
-  // Function to get initials for AvatarFallback
-  const getInitials = (name: string) => {
-    // Ensure name is a string before splitting
-    if (typeof name !== "string" || name.trim() === "") {
-      return "??"; // Default for empty or invalid names
-    }
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .substring(0, 2);
-  };
-
-  // We only need the Gemini API key now
   const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
-
-  // Initialize the Google AI SDK for Gemini
   const genAI = new GoogleGenerativeAI(geminiApiKey);
 
   const handleSendMessage = async (
     message: string,
     mode: "chatbot" | "analysis"
   ): Promise<string> => {
-
     let systemInstruction: SystemInstruction;
 
-    // --- CHATBOT MODE (using Gemini) ---
     if (mode === "chatbot") {
-      console.log(`Mode: Chatbot. Using Gemini with 'Helpy' persona...`);
       systemInstruction = {
         role: "system",
-        parts: [{ text: "You are Helpy, a friendly and helpful farming assistant. Your goal is to provide quick and conversational answers. Keep your responses simple and to the point." }]
+        parts: [{ text: "You are Helpy, a friendly and helpful farming assistant. Keep your responses simple and to the point." }]
       };
-    }
-    // --- ANALYSIS MODE (using Gemini) ---
-    else {
-      console.log(`Mode: Analysis. Using Gemini with 'Ely' persona...`);
+    } else {
       systemInstruction = {
         role: "system",
         parts: [{ text: `
@@ -156,6 +121,7 @@ const Home = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
+            {/* Reverted User Dropdown Menu for Passport.js */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -164,26 +130,16 @@ const Home = () => {
                   size="sm"
                 >
                   <Avatar className="h-8 w-8">
-                    {/* Use dynamic avatar based on displayUser.username */}
-                    <AvatarImage
-                      src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${displayUser.username}`}
-                      alt={displayUser.username}
-                    />
-                    {/* Fallback to initials */}
-                    <AvatarFallback>
-                      {getInitials(displayUser.username)}
-                    </AvatarFallback>
+                    <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${user?.email}`} alt={user?.email} />
+                    <AvatarFallback>{user?.email?.substring(0, 2).toUpperCase()}</AvatarFallback>
                   </Avatar>
-                  {/* Display dynamic username */}
-                  <span className="hidden md:inline">
-                    {displayUser.username}
-                  </span>
+                  <span className="hidden md:inline">{user?.email}</span>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
                 <DropdownMenuItem>Profile</DropdownMenuItem>
                 <DropdownMenuItem>Account Settings</DropdownMenuItem>
-                <DropdownMenuItem className="text-red-500" onClick={logout}>
+                <DropdownMenuItem onClick={logout} className="text-red-500">
                   <LogOut className="mr-2 h-4 w-4" />
                   <span>Log out</span>
                 </DropdownMenuItem>
@@ -209,12 +165,12 @@ const Home = () => {
 
         {/* Main Dashboard Content */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Data Visualization - Takes 2/3 of the screen on large devices */}
+          {/* Data Visualization */}
           <div className="lg:col-span-2">
             <DataVisualization />
           </div>
 
-          {/* Right Sidebar - Takes 1/3 of the screen on large devices */}
+          {/* Right Sidebar */}
           <div className="space-y-6">
             {/* Notification Center */}
             <Card>

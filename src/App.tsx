@@ -1,67 +1,46 @@
-import { Suspense } from "react";
-import { useRoutes, Routes, Route, Navigate } from "react-router-dom";
-
+import { Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "./context/AuthContext";
 import Home from "./components/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
+import React from "react";
 
-import { AuthProvider, useAuth } from "./context/AuthContext";
-
-import routes from "tempo-routes";
-
-/**
- * ProtectedRoute Component
- * Guards routes that require authentication.
- */
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  const { isAuthenticated, isLoading } = useAuth(); // <--- Get isLoading from useAuth()
-
-  // <--- IMPORTANT: Add this check
+// Helper component for protected routes
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) {
-    return <p>Loading authentication...</p>; // Or a spinner component
+    return <div>Loading...</div>; // Or a spinner component
   }
-
-  if (!isAuthenticated) {
-    // If not authenticated and loading is complete, redirect to the login page.
-    return <Navigate to="/login" replace />;
-  }
-  return <>{children}</>;
+  return isAuthenticated ? <>{children}</> : <Navigate to="/login" />;
 };
 
+
 function App() {
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // If the auth state is still loading, you can show a global spinner
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div>Loading Application...</div>
+      </div>
+    );
+  }
+
   return (
-    <Suspense fallback={<p>Loading...</p>}>
-      {/* Wrap your entire application's routes with AuthProvider */}
-      <AuthProvider>
-        <Routes>
-          {/* Public Route: Login Page */}
-          <Route path="/login" element={<Login />} />
+    <Routes>
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute>
+            <Home />
+          </ProtectedRoute>
+        }
 
-          {/* New Public Route: Register Page */}
-          <Route path="/register" element={<Register />} />
-
-          {/* Protected Route: Home Page (Dashboard) */}
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
-
-          {/* Dynamic routes from 'tempo-routes'. Decide if these need protection. */}
-          {/* If they should be protected:
-          {import.meta.env.VITE_TEMPO === "true" && (
-            <Route path="*" element={<ProtectedRoute>{useRoutes(routes)}</ProtectedRoute>} />
-          )}
-          Otherwise, keep as is: */}
-          {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
-        </Routes>
-      </AuthProvider>
-    </Suspense>
+      />
+    </Routes>
   );
 }
 
