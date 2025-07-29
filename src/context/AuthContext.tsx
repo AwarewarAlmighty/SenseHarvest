@@ -1,22 +1,17 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
-import { jwtDecode } from "jwt-decode";
 
-// Define the shape of the user data stored in the JWT payload
-interface DecodedToken {
-  userId: string;
-  username: string;
+// Define the shape of the user data
+interface User {
+  _id: string;
   email: string;
-  role?: string;
-  exp: number;
-  iat: number;
 }
 
 // Define the shape of our authentication context
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: DecodedToken | null;
+  user: User | null;
   login: (token: string) => void;
   logout: () => void;
   isLoading: boolean; // <--- New: Add isLoading to the context type
@@ -39,18 +34,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [user, setUser] = useState<DecodedToken | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true); // <--- New: Initial loading state
   const navigate = useNavigate();
 
   // Function to handle login
   const login = (token: string) => {
     localStorage.setItem("authToken", token);
-    const decodedUser = jwtDecode<DecodedToken>(token);
-    setUser(decodedUser);
-    setIsAuthenticated(true);
-    // setIsLoading(false); // No need to set here, as this happens on explicit login action
-    navigate("/");
+    // Fetch user data from the /me endpoint
+    fetch("http://localhost:3000/api/auth/me", {
+        headers: {
+            "Authorization": `Bearer ${token}`
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        setUser(data);
+        setIsAuthenticated(true);
+        navigate("/");
+    })
+    .catch(err => {
+        console.error("Failed to fetch user data:", err);
+        logout();
+    });
   };
 
   // Function to handle logout
@@ -66,21 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const token = localStorage.getItem("authToken");
     if (token) {
-      try {
-        const decodedUser = jwtDecode<DecodedToken>(token);
-        if (decodedUser.exp * 1000 < Date.now()) {
-          console.log("JWT expired. Logging out.");
-          logout(); // This will also set isLoading to false
-        } else {
-          setUser(decodedUser);
-          setIsAuthenticated(true);
-          console.log("User re-authenticated from localStorage.");
-          setIsLoading(false); // <--- New: Set to false only when valid token is found
-        }
-      } catch (error) {
-        console.error("Failed to decode token or token is invalid:", error);
-        logout(); // This will also set isLoading to false
-      }
+        login(token);
     } else {
       // No token found, so not authenticated, and loading is complete
       setIsLoading(false); // <--- New: Set to false if no token

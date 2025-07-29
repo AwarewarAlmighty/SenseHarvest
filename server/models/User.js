@@ -1,11 +1,10 @@
-const mongoose = require("mongoose");
-const bcrypt = require("bcryptjs");
+import mongoose from "mongoose";
 
 const userSchema = mongoose.Schema(
   {
     username: {
       type: String,
-      required: true,
+      required: false,
       unique: true,
     },
     email: {
@@ -23,20 +22,6 @@ const userSchema = mongoose.Schema(
   }
 );
 
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    // Only hash if password field is modified (or new)
-    next();
-  }
-  const salt = await bcrypt.genSalt(10); // Generate a salt
-  this.password = await bcrypt.hash(this.password, salt); // Hash the password
-});
-
-// <--- IMPORTANT: Add this method to compare entered password with hashed password
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
 const User = mongoose.model("User", userSchema);
 
-module.exports = User;
+export default User;
