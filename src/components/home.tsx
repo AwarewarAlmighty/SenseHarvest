@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { GoogleGenerativeAI, SystemInstruction } from "@google/generative-ai";
 import { useAuth } from "../context/AuthContext"; // Import the useAuth hook for Passport.js
+import { ModeToggle } from "./theme-toggle"; // Import the new theme toggle component
 
 const Home = () => {
   const { user, logout } = useAuth(); // Get user and logout function from our context
@@ -92,6 +93,8 @@ const Home = () => {
           </div>
 
           <div className="flex items-center gap-4">
+            <ModeToggle /> {/* Add the theme toggle button here */}
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
@@ -121,7 +124,7 @@ const Home = () => {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            {/* Reverted User Dropdown Menu for Passport.js */}
+            {/* User Dropdown Menu for Passport.js */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
