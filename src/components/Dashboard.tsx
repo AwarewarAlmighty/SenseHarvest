@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const Home = () => {
+const Dashboard = () => {
   // Mock user data
   const user = {
     name: "John Farmer",
@@ -161,4 +161,4 @@ const Home = () => {
   );
 };
 
-export default Home;
+export default Dashboard;
