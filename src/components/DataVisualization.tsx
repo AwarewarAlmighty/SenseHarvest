@@ -251,7 +251,7 @@ const DataVisualization = () => {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex flex-col sm:flex-row justify-between gap-4">
+          <div className="flex flex-col sm:flex-row justify-between gap-4 ">
             <div className="w-full sm:w-auto">
               <Tabs
                 defaultValue="realtime"
@@ -268,9 +268,9 @@ const DataVisualization = () => {
               </Tabs>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2">
+            <div className="flex flex-col sm:flex-row gap-2 ">
               <Select value={selectedSensor} onValueChange={setSelectedSensor}>
-                <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectTrigger className="w-full sm:w-auto">
                   <SelectValue placeholder="Select sensor" />
                 </SelectTrigger>
                 <SelectContent>
@@ -287,7 +287,7 @@ const DataVisualization = () => {
                   <PopoverTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full sm:w-[180px] justify-start text-left font-normal"
+                      className="w-full sm:w-auto justify-start text-left font-normal"
                     >
                       <CalendarIcon className="mr-2 h-4 w-4" />
                       {dateRange?.from ? (
