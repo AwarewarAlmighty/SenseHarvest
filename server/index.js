@@ -6,6 +6,7 @@ import jwt from "jsonwebtoken";
 import bcrypt from "bcryptjs";
 import { connectDB, getConnection } from "./config/db.js";
 import { initializePassport } from "./auth.js";
+import sensorRoutes from "./routes/sensors.js";
 
 dotenv.config();
 
@@ -62,12 +63,12 @@ async function startServer() {
         })(req, res, next);
     });
 
-    // GET USER DATA ROUTE (/me)
     app.get("/api/auth/me", passport.authenticate('jwt', { session: false }), (req, res) => {
         const { password, ...userWithoutPassword } = req.user;
         res.json(userWithoutPassword);
     });
 
+    app.use("/api/sensors", sensorRoutes);
 
     app.listen(PORT, () => {
         console.log(`Server is running on http://localhost:${PORT}`);

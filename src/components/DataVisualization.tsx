@@ -42,6 +42,7 @@ interface SensorData {
   color: string;
 }
 
+
 const generateValue = (base: number, range: number) => base + Math.random() * range;
 
 const sensorTemplates = [
@@ -51,64 +52,40 @@ const sensorTemplates = [
   { id: "gas1", name: "CO2 Level", unit: "ppm", color: "#9966FF", baseValue: 400, range: 100 },
 ];
 
-const generateSensorData = (timeRange: string): SensorData[] => {
-  const now = new Date();
-  let dataPoints: DataPoint[] = [];
+const fetchSensorData = async (sensorId: string, range: string): Promise<SensorData> => {
+  const response = await fetch(`http://localhost:3000/api/sensors/${sensorId}?range=${range}`);
+  const rawData = await response.json();
 
-  return sensorTemplates.map(sensorTemplate => {
-    let adjustedDataPoints: DataPoint[] = [];
-    if (timeRange === 'daily') {
-        const startOfCurrentWeek = startOfWeek(now, { weekStartsOn: 0 });
-        adjustedDataPoints = Array.from({ length: 7 }, (_, i) => {
-            const date = addDays(startOfCurrentWeek, i);
-            return {
-                timestamp: date.toISOString(),
-                value: generateValue(sensorTemplate.baseValue, sensorTemplate.range),
-                label: format(date, 'eeee'),
-            };
-        });
-    } else if (timeRange === 'weekly') {
-        adjustedDataPoints = Array.from({ length: 4 }, (_, i) => {
-            const date = subWeeks(now, i);
-            return {
-                timestamp: date.toISOString(),
-                value: generateValue(sensorTemplate.baseValue * 7, sensorTemplate.range * 7), // Average of 7 daily values
-                label: `Week ${4 - i}`,
-            };
-        }).reverse();
-    } else if (timeRange === 'monthly') {
-        const currentYear = now.getFullYear();
-        adjustedDataPoints = Array.from({ length: 12 }, (_, i) => {
-            const date = new Date(currentYear, i, 1);
-            return {
-                timestamp: date.toISOString(),
-                value: generateValue(sensorTemplate.baseValue * 30, sensorTemplate.range * 30), // Average of 30 daily values (approx)
-                label: format(date, 'MMMM'),
-            };
-        });
-    } else { // realtime
-        adjustedDataPoints = Array.from({ length: 8 }, (_, i) => {
-            const date = new Date(now.getTime() - i * 60000); // 1 minute interval
-            return {
-                timestamp: date.toISOString(),
-                value: generateValue(sensorTemplate.baseValue, sensorTemplate.range),
-                label: format(date, 'p'),
-            };
-        }).reverse();
-    }
+  const sensorTemplate = sensorTemplates.find(t => t.id === sensorId);
+  if (!sensorTemplate) throw new Error(`No template for sensorId: ${sensorId}`);
 
-    return {
-      id: sensorTemplate.id,
-      name: sensorTemplate.name,
-      unit: sensorTemplate.unit,
-      color: sensorTemplate.color,
-      data: adjustedDataPoints
-    };
-  });
+  const formattedData: DataPoint[] = rawData.map((d: any) => ({
+    timestamp: d.timestamp,
+    value: d.value,
+    label: format(new Date(d.timestamp), 
+    range === "realtime"
+      ? "HH:mm:ss"              
+      : range === "daily"
+      ? "MMM d, HH:mm"           
+      : range === "weekly"
+      ? "'Week' w"               // e.g. "Week 31"
+      : "MMM"                    // e.g. "Jul"
+    ),
+  }));
+
+  return {
+    id: sensorId,
+    name: sensorTemplate.name,
+    unit: sensorTemplate.unit,
+    color: sensorTemplate.color,
+    data: formattedData,
+  };
 };
 
+
+
 const DataVisualization = () => {
-  const [realtimeData, setRealtimeData] = useState<SensorData[]>(generateSensorData('realtime'));
+  const [realtimeData, setRealtimeData] = useState<SensorData[]>([]);
   const [dailyData, setDailyData] = useState<SensorData[]>([]);
   const [weeklyData, setWeeklyData] = useState<SensorData[]>([]);
   const [monthlyData, setMonthlyData] = useState<SensorData[]>([]);
@@ -122,44 +99,45 @@ const DataVisualization = () => {
   }>({ from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) });
 
   useEffect(() => {
-    setDailyData(generateSensorData('daily'));
-    setWeeklyData(generateSensorData('weekly'));
-    setMonthlyData(generateSensorData('monthly'));
+  const loadData = async () => {
+    const sensorIds = ["temp1", "hum1", "soil1", "gas1"];
+    const data = await Promise.all(sensorIds.map(id => fetchSensorData(id, "realtime")));
+    setRealtimeData(data);
+  };
 
-    const interval = setInterval(() => {
-        const now = new Date();
-        const newLabel = format(now, 'p');
+  loadData();
+}, []);
 
-        setRealtimeData(prevData => 
-            prevData.map(sensor => {
-                const sensorTemplate = sensorTemplates.find(t => t.id === sensor.id);
-                const newValue = sensorTemplate ? generateValue(sensorTemplate.baseValue, sensorTemplate.range) : 0;
-                const newPoint = {
-                    timestamp: now.toISOString(),
-                    label: newLabel,
-                    value: newValue
-                };
-                return {
-                    ...sensor,
-                    data: [...sensor.data.slice(sensor.data.length - 7), newPoint] // Keep 8 elements (slice from 7th from end)
-                };
-            })
-        );
-    }, 2000);
 
-    return () => clearInterval(interval);
-  }, []);
+  const handleRefresh = useCallback(async () => {
+  setIsLoading(true);
 
-  const handleRefresh = useCallback(() => {
-    setIsLoading(true);
-    setTimeout(() => {
-      setRealtimeData(generateSensorData('realtime'));
-      setDailyData(generateSensorData('daily'));
-      setWeeklyData(generateSensorData('weekly'));
-      setMonthlyData(generateSensorData('monthly'));
-      setIsLoading(false);
-    }, 500);
-  }, []);
+  try {
+    const sensorIds = ["temp1", "hum1", "soil1", "gas1"];
+
+    const [
+      realtime,
+      daily,
+      weekly,
+      monthly
+    ] = await Promise.all([
+      Promise.all(sensorIds.map(id => fetchSensorData(id, "realtime"))),
+      Promise.all(sensorIds.map(id => fetchSensorData(id, "daily"))),
+      Promise.all(sensorIds.map(id => fetchSensorData(id, "weekly"))),
+      Promise.all(sensorIds.map(id => fetchSensorData(id, "monthly")))
+    ]);
+
+    setRealtimeData(realtime);
+    setDailyData(daily);
+    setWeeklyData(weekly);
+    setMonthlyData(monthly);
+  } catch (err) {
+    console.error("Error refreshing sensor data:", err);
+  }
+
+  setIsLoading(false);
+}, []);
+
 
   const handleExport = () => {
     console.log("Exporting data...");

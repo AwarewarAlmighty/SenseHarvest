@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import useWebSocket from "../hooks/useWebSocket";
 import {
   Tooltip,
   TooltipContent,
@@ -31,9 +32,10 @@ interface SensorStatusGridProps {
   sensors?: SensorData[];
 }
 
-const SensorStatusGrid: React.FC<SensorStatusGridProps> = ({
-  sensors = defaultSensors,
-}) => {
+const SensorStatusGrid: React.FC = () => {
+  const liveSensors = useWebSocket("ws://localhost:1880/ws/SenseHarvest");
+  const sensors = liveSensors ?? defaultSensors;
+
   const getStatusColor = (status: string) => {
     switch (status) {
       case "normal":
