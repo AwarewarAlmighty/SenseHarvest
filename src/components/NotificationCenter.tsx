@@ -24,17 +24,17 @@ interface Notification {
 }
 
 interface NotificationCenterProps {
-  notifications?: Notification[];
-  onMarkAsRead?: (id: string) => void;
-  onTakeAction?: (id: string, action: string) => void;
-  onClearAll?: () => void;
+  notifications: Notification[];
+  onMarkAsRead: (id: string) => void;
+  onTakeAction: (id: string, action: string) => void;
+  onClearAll: () => void;
 }
 
 const NotificationCenter: React.FC<NotificationCenterProps> = ({
-  notifications = defaultNotifications,
-  onMarkAsRead = () => {},
-  onTakeAction = () => {},
-  onClearAll = () => {},
+  notifications,
+  onMarkAsRead,
+  onTakeAction,
+  onClearAll,
 }) => {
   const [activeTab, setActiveTab] = useState<string>("all");
 
@@ -43,77 +43,63 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
   const filteredNotifications = notifications.filter((notification) => {
     if (activeTab === "all") return true;
     if (activeTab === "unread") return !notification.read;
-    return notification.severity === activeTab;
+    if (activeTab === "critical") return notification.severity === "critical";
+    if (activeTab === "warning") return notification.severity === "warning";
+    if (activeTab === "info") return notification.severity === "info";
+    return true;
   });
 
-  const getSeverityIcon = (severity: Notification["severity"]) => {
+  const getSeverityIcon = (severity: string) => {
     switch (severity) {
       case "critical":
         return <AlertCircle className="h-5 w-5 text-destructive" />;
       case "warning":
-        return <AlertTriangle className="h-5 w-5 text-yellow-500" />;
+        return <AlertTriangle className="h-5 w-5 text-amber-500" />;
       case "info":
       default:
         return <CheckCircle className="h-5 w-5 text-green-500" />;
     }
   };
 
-  const getSeverityBadge = (severity: Notification["severity"]) => {
+  const getSeverityBadge = (severity: string) => {
     switch (severity) {
       case "critical":
         return <Badge variant="destructive">Critical</Badge>;
       case "warning":
-        // Use a variant that works in both light and dark mode
         return (
-          <Badge
-            variant="outline"
-            className="border-yellow-500 text-yellow-500"
-          >
+          <Badge variant="secondary" className="bg-amber-500 text-white">
             Warning
           </Badge>
         );
       case "info":
       default:
         return (
-          <Badge
-            variant="outline"
-            className="border-green-500 text-green-500"
-          >
+          <Badge variant="secondary" className="bg-green-500 text-white">
             Info
           </Badge>
         );
     }
   };
 
-  // Define border classes based on severity
-  const getNotificationBorder = (notification: Notification) => {
-    if (notification.read) return "border-transparent";
-    switch (notification.severity) {
-      case "critical":
-        return "border-destructive/50";
-      case "warning":
-        return "border-yellow-500/50";
-      case "info":
-      default:
-        return "border-green-500/50";
-    }
-  };
-
   return (
-    <Card className="w-full h-full"> {/* Removed bg-white */}
+    <Card className="w-full h-full bg-white shadow-md">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <Bell className="h-5 w-5" />
             <CardTitle className="text-lg">Notifications</CardTitle>
             {unreadCount > 0 && (
-              // Use primary background for the count badge
-              <Badge variant="default" className="bg-primary text-primary-foreground">
+              <Badge variant="secondary" className="bg-primary text-white">
                 {unreadCount} new
               </Badge>
             )}
           </div>
-          <Button variant="ghost" size="sm" onClick={onClearAll}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClearAll}
+            disabled={notifications.length === 0}
+          >
             Clear all
           </Button>
         </div>
@@ -142,10 +128,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                   {filteredNotifications.map((notification) => (
                     <div
                       key={notification.id}
-                      // Use theme-aware colors for read/unread state and severity border
-                      className={`p-3 rounded-lg border ${
-                        notification.read ? "bg-card" : "bg-muted/50"
-                      } ${getNotificationBorder(notification)}`}
+                      className={`p-3 rounded-lg border ${notification.read ? "bg-white" : "bg-muted/30"} ${notification.severity === "critical" ? "border-destructive/30" : notification.severity === "warning" ? "border-amber-500/30" : "border-green-500/30"}`}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex gap-3">
@@ -172,7 +155,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                                   onClick={() =>
                                     onTakeAction(
                                       notification.id,
-                                      notification.action || ""
+                                      notification.action || "",
                                     )
                                   }
                                 >
@@ -212,35 +195,5 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
     </Card>
   );
 };
-
-// Default notifications for demonstration
-const defaultNotifications: Notification[] = [
-    {
-      id: "1",
-      title: "Temperature Alert",
-      description: "Greenhouse temperature exceeds threshold (32°C)",
-      timestamp: "10 minutes ago",
-      severity: "critical",
-      read: false,
-      action: "Activate cooling system",
-    },
-    {
-      id: "2",
-      title: "Humidity Warning",
-      description: "Humidity levels below optimal range (30%)",
-      timestamp: "1 hour ago",
-      severity: "warning",
-      read: false,
-      action: "Check irrigation system",
-    },
-    {
-      id: "3",
-      title: "Soil Moisture Update",
-      description: "Soil moisture levels have returned to normal",
-      timestamp: "3 hours ago",
-      severity: "info",
-      read: true,
-    },
-  ];
 
 export default NotificationCenter;
