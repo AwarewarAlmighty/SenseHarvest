@@ -24,61 +24,17 @@ interface Notification {
 }
 
 interface NotificationCenterProps {
-  notifications?: Notification[];
-  onMarkAsRead?: (id: string) => void;
-  onTakeAction?: (id: string, action: string) => void;
-  onClearAll?: () => void;
+  notifications: Notification[];
+  onMarkAsRead: (id: string) => void;
+  onTakeAction: (id: string, action: string) => void;
+  onClearAll: () => void;
 }
 
 const NotificationCenter: React.FC<NotificationCenterProps> = ({
-  notifications = [
-    {
-      id: "1",
-      title: "Temperature Alert",
-      description: "Greenhouse temperature exceeds threshold (32°C)",
-      timestamp: "10 minutes ago",
-      severity: "critical",
-      read: false,
-      action: "Activate cooling system",
-    },
-    {
-      id: "2",
-      title: "Humidity Warning",
-      description: "Humidity levels below optimal range (30%)",
-      timestamp: "1 hour ago",
-      severity: "warning",
-      read: false,
-      action: "Check irrigation system",
-    },
-    {
-      id: "3",
-      title: "Soil Moisture Update",
-      description: "Soil moisture levels have returned to normal",
-      timestamp: "3 hours ago",
-      severity: "info",
-      read: true,
-    },
-    {
-      id: "4",
-      title: "Gas Level Alert",
-      description: "CO2 levels above normal in storage area",
-      timestamp: "5 hours ago",
-      severity: "warning",
-      read: false,
-      action: "Increase ventilation",
-    },
-    {
-      id: "5",
-      title: "System Update",
-      description: "Sensor firmware updated successfully",
-      timestamp: "1 day ago",
-      severity: "info",
-      read: true,
-    },
-  ],
-  onMarkAsRead = () => {},
-  onTakeAction = () => {},
-  onClearAll = () => {},
+  notifications,
+  onMarkAsRead,
+  onTakeAction,
+  onClearAll,
 }) => {
   const [activeTab, setActiveTab] = useState<string>("all");
 
@@ -138,7 +94,12 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
               </Badge>
             )}
           </div>
-          <Button variant="ghost" size="sm" onClick={onClearAll}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClearAll}
+            disabled={notifications.length === 0}
+          >
             Clear all
           </Button>
         </div>

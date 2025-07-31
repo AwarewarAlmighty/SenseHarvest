@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import SensorStatusGrid from "./SensorStatusGrid";
@@ -15,13 +15,79 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+// Mock initial notifications data
+const initialNotifications = [
+  {
+    id: "1",
+    title: "Temperature Alert",
+    description: "Greenhouse temperature exceeds threshold (32°C)",
+    timestamp: "10 minutes ago",
+    severity: "critical",
+    read: false,
+    action: "Activate cooling system",
+  },
+  {
+    id: "2",
+    title: "Humidity Warning",
+    description: "Humidity levels below optimal range (30%)",
+    timestamp: "1 hour ago",
+    severity: "warning",
+    read: false,
+    action: "Check irrigation system",
+  },
+  {
+    id: "3",
+    title: "Soil Moisture Update",
+    description: "Soil moisture levels have returned to normal",
+    timestamp: "3 hours ago",
+    severity: "info",
+    read: true,
+  },
+  {
+    id: "4",
+    title: "Gas Level Alert",
+    description: "CO2 levels above normal in storage area",
+    timestamp: "5 hours ago",
+    severity: "warning",
+    read: false,
+    action: "Increase ventilation",
+  },
+  {
+    id: "5",
+    title: "System Update",
+    description: "Sensor firmware updated successfully",
+    timestamp: "1 day ago",
+    severity: "info",
+    read: true,
+  },
+];
+
 const Dashboard = () => {
+  const [notifications, setNotifications] = useState(initialNotifications);
+
   // Mock user data
   const user = {
     name: "John Farmer",
     email: "john@farmtech.com",
     avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=john",
   };
+
+  const handleClearAll = () => {
+    setNotifications([]);
+  };
+
+  const handleMarkAsRead = (id: string) => {
+    setNotifications((prev) =>
+      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
+    );
+  };
+
+  const handleTakeAction = (id: string, action: string) => {
+    console.log(`Action taken for notification ${id}: ${action}`);
+    // Implement further action logic here
+  };
+
+  const unreadCount = notifications.filter((n) => !n.read).length;
 
   return (
     <div className="min-h-screen bg-background">
@@ -47,14 +113,16 @@ const Dashboard = () => {
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon" className="relative">
                   <Bell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                  {unreadCount > 0 && (
+                    <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                  )}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-80">
                 <div className="p-4">
                   <h3 className="font-medium">Notifications</h3>
                   <p className="text-sm text-muted-foreground">
-                    You have 3 unread notifications
+                    You have {unreadCount} unread notifications
                   </p>
                 </div>
               </DropdownMenuContent>
@@ -126,7 +194,12 @@ const Dashboard = () => {
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-lg font-medium mb-4">Notifications</h3>
-                <NotificationCenter />
+                <NotificationCenter
+                  notifications={notifications}
+                  onClearAll={handleClearAll}
+                  onMarkAsRead={handleMarkAsRead}
+                  onTakeAction={handleTakeAction}
+                />
               </CardContent>
             </Card>
 

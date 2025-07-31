@@ -17,6 +17,16 @@ import {
 } from "@/components/ui/popover";
 import { CalendarIcon, Download, RefreshCw } from "lucide-react";
 import { format, subDays, subWeeks, subMonths, startOfWeek, addDays } from "date-fns";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 interface DataPoint {
   timestamp: string;
@@ -67,16 +77,15 @@ const generateSensorData = (timeRange: string): SensorData[] => {
             };
         }).reverse();
     } else if (timeRange === 'monthly') {
-        const months = Array.from({ length: 12 }, (_, i) => {
-            const date = subMonths(now, i);
+        const currentYear = now.getFullYear();
+        adjustedDataPoints = Array.from({ length: 12 }, (_, i) => {
+            const date = new Date(currentYear, i, 1);
             return {
                 timestamp: date.toISOString(),
                 value: generateValue(sensorTemplate.baseValue * 30, sensorTemplate.range * 30), // Average of 30 daily values (approx)
                 label: format(date, 'MMMM'),
-                monthIndex: date.getMonth()
             };
-        }).sort((a, b) => a.monthIndex - b.monthIndex);
-        adjustedDataPoints = months.map(({ monthIndex, ...rest }) => rest);
+        });
     } else { // realtime
         adjustedDataPoints = Array.from({ length: 8 }, (_, i) => {
             const date = new Date(now.getTime() - i * 60000); // 1 minute interval
@@ -175,28 +184,39 @@ const DataVisualization = () => {
 
   const renderChart = (data: SensorData | null) => {
     if (!data) {
-        return <div className="w-full h-64 bg-muted/20 rounded-md flex items-center justify-center">Loading data...</div>;
+      return (
+        <div className="w-full h-64 bg-muted/20 rounded-md flex items-center justify-center">
+          Loading data...
+        </div>
+      );
     }
     return (
-      <div className="w-full h-100 bg-muted/20 rounded-md flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-muted-foreground">
-            Chart visualization for {activeTab} data
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Displaying {data?.name} data ({data?.unit})
-          </p>
-          <div className="mt-4 flex flex-col gap-2 w-48">
-            {data?.data.map((point, index) => (
-              <div key={index} className="flex justify-between text-xs gap-4">
-                <span>{point.label}</span>
-                <span>
-                  {point.value.toFixed(1)} {data.unit}
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+      <div>
+        <h3 className="text-lg font-medium text-center mb-4">
+          {data.name} ({data.unit})
+        </h3>
+        <ResponsiveContainer width="100%" height={300}>
+          <LineChart data={data.data}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="label"
+              interval={0}
+              angle={-45}
+              textAnchor="end"
+              height={70}
+              style={{ fontSize: "14px" }}
+            />
+            <YAxis />
+            <Tooltip />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="value"
+              stroke={data.color}
+              activeDot={{ r: 8 }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
       </div>
     );
   };
