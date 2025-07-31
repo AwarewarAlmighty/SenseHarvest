@@ -4,7 +4,6 @@ import Profile from './components/Profile';
 import Settings from './components/Settings';
 import Sidebar from './components/Sidebar';
 import { useAuth } from "./context/AuthContext";
-import Home from "./components/home";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import React from "react";
