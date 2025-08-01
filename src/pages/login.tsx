@@ -1,6 +1,12 @@
 import React, { useState } from "react";
 import { useAuth } from "../context/AuthContext";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "../components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../components/ui/card";
 import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
@@ -12,7 +18,7 @@ function Login() {
   const [error, setError] = useState("");
   const { login } = useAuth();
 
-  const handleSubmit = async (event) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError("");
 
@@ -30,10 +36,14 @@ function Login() {
       if (response.ok) {
         login(data.token);
       } else {
-        setError(data.message || "Login failed. Please check your credentials.");
+        setError(
+          data.message || "Login failed. Please check your credentials."
+        );
       }
     } catch (err) {
-      setError("Could not connect to the server. Please check your network and server status.");
+      setError(
+        "Could not connect to the server. Please check your network and server status."
+      );
     }
   };
 
@@ -51,19 +61,36 @@ function Login() {
             <div className="grid gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
-                <Input id="email" type="email" placeholder="m@example.com" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="m@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="password">Password</Label>
-                <Input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <Input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
               </div>
               {error && <p className="text-red-500 text-sm">{error}</p>}
-              <Button type="submit" className="w-full">Sign in</Button>
+              <Button type="submit" className="w-full">
+                Sign in
+              </Button>
             </div>
           </form>
           <div className="mt-4 text-center text-sm">
             Don't have an account?{" "}
-            <Link to="/register" className="underline">Sign up</Link>
+            <Link to="/register" className="underline">
+              Sign up
+            </Link>
           </div>
         </CardContent>
       </Card>

@@ -1,15 +1,18 @@
 import { Routes, Route, Navigate } from "react-router-dom";
-import Dashboard from './components/Dashboard';
-import Profile from './components/Profile';
-import Settings from './components/Settings';
-import Sidebar from './components/Sidebar';
+import Dashboard from "./components/Dashboard";
+import Inventory from "./pages/Inventory";
+import Profile from "./components/Profile";
+import Settings from "./components/Settings";
+import Sidebar from "./components/Sidebar";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/login";
 import Register from "./pages/register";
 import React from "react";
 
 // Helper component for protected routes
-const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const { isAuthenticated, isLoading } = useAuth();
   if (isLoading) {
     return <div>Loading...</div>; // Or a spinner component
@@ -40,6 +43,14 @@ function App() {
             element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/inventory"
+            element={
+              <ProtectedRoute>
+                <Inventory />
               </ProtectedRoute>
             }
           />
