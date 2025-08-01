@@ -33,7 +33,7 @@ interface SensorStatusGridProps {
 }
 
 const SensorStatusGrid: React.FC = () => {
-  const liveSensors = useWebSocket("ws://localhost:1880/ws/SenseHarvest");
+  const liveSensors = useWebSocket(import.meta.env.VITE_WS_URL);
   const sensors = liveSensors ?? defaultSensors;
 
   const getStatusColor = (status: string) => {
@@ -87,7 +87,9 @@ const SensorStatusGrid: React.FC = () => {
         {sensors.map((sensor) => (
           <Card
             key={sensor.id}
-            className={`border-l-4 ${getStatusColor(sensor.status)} transition-all hover:shadow-md`}
+            className={`border-l-4 ${getStatusColor(
+              sensor.status
+            )} transition-all hover:shadow-md`}
           >
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
