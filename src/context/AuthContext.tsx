@@ -1,14 +1,17 @@
 import React, { createContext, useState, useEffect, useContext } from "react";
 import { useNavigate } from "react-router-dom";
+import { jwtDecode } from "jwt-decode";
 
 interface User {
   _id: string;
   email: string;
+  role: string;
 }
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: User | null;
+  token: string | null;
   login: (token: string) => void;
   logout: () => void;
   isLoading: boolean;
@@ -29,38 +32,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const navigate = useNavigate();
 
   const login = (token: string) => {
     localStorage.setItem("authToken", token);
-    fetch("http://localhost:3000/api/auth/me", {
-        headers: {
-            "Authorization": `Bearer ${token}`
-        }
-    })
-    .then(res => {
-        if (!res.ok) { throw new Error("Failed to fetch"); }
-        return res.json();
-    })
-    .then(data => {
-        setUser(data);
-        setIsAuthenticated(true);
-        navigate("/");
-    })
-    .catch(err => {
-        console.error("Failed to fetch user data:", err);
-        logout(); // Logout if fetching user fails
-    })
-    .finally(() => {
-        setIsLoading(false);
-    });
+    setToken(token);
+    try {
+      const decoded: User = jwtDecode(token);
+      setUser(decoded);
+      setIsAuthenticated(true);
+      navigate("/");
+    } catch (error) {
+      console.error("Invalid token:", error);
+      logout();
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const logout = () => {
     localStorage.removeItem("authToken");
     setIsAuthenticated(false);
     setUser(null);
+    setToken(null);
     setIsLoading(false);
     navigate("/login");
   };
@@ -76,7 +72,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, user, login, logout, isLoading }}
+      value={{ isAuthenticated, user, token, login, logout, isLoading }}
     >
       {children}
     </AuthContext.Provider>

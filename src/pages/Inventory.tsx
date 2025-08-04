@@ -1,5 +1,5 @@
 // Inventory.jsx (or Inventory.tsx)
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import {
   DropdownMenu,
@@ -8,15 +8,15 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { ModeToggle } from "../components/theme-toggle";
-import { Bell, Settings, LogOut, Menu } from "lucide-react";
+import { Bell, Settings, LogOut, Menu, Trash2 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import { Button } from "@/components/ui/button";
 
 // Define the type for an inventory item
 interface InventoryItem {
-  id: string;
-  name: string;
+  _id: string;
+  item: string;
   place: string;
   amount: string;
 }
@@ -25,14 +25,16 @@ interface InventoryItem {
 interface DefaultTableProps {
   tableRows: InventoryItem[];
   onEditClick: (rowData: InventoryItem) => void;
+  onDeleteClick: (id: string) => void;
 }
 
 // A functional component for the table
 const DefaultTable: React.FC<DefaultTableProps> = ({
   tableRows,
   onEditClick,
+  onDeleteClick,
 }) => {
-  const TABLE_HEAD = ["Name", "Place", "Amount", ""];
+  const TABLE_HEAD = ["Item", "Place", "Amount", ""];
 
   return (
     <div className="p-4 bg-white shadow-md rounded-lg overflow-x-auto mt-4">
@@ -54,10 +56,10 @@ const DefaultTable: React.FC<DefaultTableProps> = ({
             const classes = `p-4 ${isLast ? "" : "border-b border-gray-200"}`;
 
             return (
-              <tr key={rowData.id}>
+              <tr key={rowData._id}>
                 <td className={classes}>
                   <p className="font-normal text-sm text-gray-800">
-                    {rowData.name}
+                    {rowData.item}
                   </p>
                 </td>
                 <td className={classes}>
@@ -70,7 +72,7 @@ const DefaultTable: React.FC<DefaultTableProps> = ({
                     {rowData.amount}
                   </p>
                 </td>
-                <td className={classes}>
+                <td className={`${classes} flex gap-2`}>
                   <button
                     onClick={() => onEditClick(rowData)}
                     className="text-sm font-medium text-blue-600 hover:text-blue-800"
@@ -90,6 +92,12 @@ const DefaultTable: React.FC<DefaultTableProps> = ({
                       />
                     </svg>
                   </button>
+                  <button
+                    onClick={() => onDeleteClick(rowData._id)}
+                    className="text-sm font-medium text-red-600 hover:text-red-800"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </td>
               </tr>
             );
@@ -100,40 +108,7 @@ const DefaultTable: React.FC<DefaultTableProps> = ({
   );
 };
 
-// Sample Data
-const initialInventory: InventoryItem[] = [
-  {
-    id: "1",
-    name: "Hydroponics Unit 1",
-    place: "Greenhouse A",
-    amount: "150 plants",
-  },
-  {
-    id: "2",
-    name: "Soil Moisture Sensor",
-    place: "Field B",
-    amount: "N/A",
-  },
-  {
-    id: "3",
-    name: "IoT Weather Station",
-    place: "Farm Entrance",
-    amount: "N/A",
-  },
-  {
-    id: "4",
-    name: "Water Pump System",
-    place: "Reservoir C",
-    amount: "1 unit",
-  },
-  {
-    id: "5",
-    name: "Automated Sprinkler",
-    place: "Field D",
-    amount: "1 system",
-  },
-];
-
+// Template notifications
 const initialNotifications = [
   {
     id: "1",
@@ -183,8 +158,7 @@ const initialNotifications = [
 export default function Inventory() {
   const { user, logout } = useAuth();
   const [notifications] = useState(initialNotifications);
-  const [inventoryItems, setInventoryItems] =
-    useState<InventoryItem[]>(initialInventory);
+  const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([]);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [newItemName, setNewItemName] = useState("");
   const [newItemPlace, setNewItemPlace] = useState("");
@@ -195,31 +169,59 @@ export default function Inventory() {
   const [editingItem, setEditingItem] = useState<InventoryItem | null>(null);
   const [editedPlace, setEditedPlace] = useState("");
   const [editedAmount, setEditedAmount] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  const handleAddItem = (e: React.FormEvent) => {
+  useEffect(() => {
+    const fetchInventoryItems = async () => {
+      try {
+        const response = await fetch("/api/inventory");
+        if (!response.ok) {
+          throw new Error("Failed to fetch inventory items");
+        }
+        const data = await response.json();
+        setInventoryItems(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchInventoryItems();
+  }, []);
+
+  const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
     if (newItemName && newItemPlace && newItemAmount) {
       const newItem = {
-        id: Date.now().toString(), // Simple unique ID generation
-        name: newItemName,
+        item: newItemName,
         place: newItemPlace,
         amount: newItemAmount,
       };
-      setInventoryItems([...inventoryItems, newItem]);
-      setNewItemName("");
-      setNewItemPlace("");
-      setNewItemAmount("");
-      setIsAddModalOpen(false);
+      try {
+        const response = await fetch("/api/inventory", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newItem),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to add item");
+        }
+        const savedItem = await response.json();
+        setInventoryItems([...inventoryItems, savedItem]);
+        setNewItemName("");
+        setNewItemPlace("");
+        setNewItemAmount("");
+        setIsAddModalOpen(false);
+      } catch (err: any) {
+        setError(err.message);
+      }
     }
   };
 
-  /**
-   * Handles the click on the edit button in the table.
-   * Sets the state for the item being edited and opens the modal.
-   * @param {InventoryItem} rowData The data of the row to be edited.
-   */
   const handleEditClick = (rowData: InventoryItem) => {
     setEditingItem(rowData);
     setEditedPlace(rowData.place);
@@ -227,22 +229,50 @@ export default function Inventory() {
     setIsEditModalOpen(true);
   };
 
-  /**
-   * Saves the changes from the edit modal.
-   * Updates the inventoryItems state with the new values.
-   * @param {React.FormEvent} e The form submission event.
-   */
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (editingItem && editedPlace && editedAmount) {
-      const updatedItems = inventoryItems.map((item) =>
-        item.id === editingItem.id
-          ? { ...item, place: editedPlace, amount: editedAmount }
-          : item
-      );
-      setInventoryItems(updatedItems);
-      setIsEditModalOpen(false);
-      setEditingItem(null);
+      const updatedItem = {
+        ...editingItem,
+        place: editedPlace,
+        amount: editedAmount,
+      };
+      try {
+        const response = await fetch(`/api/inventory/${editingItem._id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ place: editedPlace, amount: editedAmount }),
+        });
+        if (!response.ok) {
+          throw new Error("Failed to update item");
+        }
+        const result = await response.json();
+        setInventoryItems(
+          inventoryItems.map((item) =>
+            item._id === editingItem._id ? result : item
+          )
+        );
+        setIsEditModalOpen(false);
+        setEditingItem(null);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    }
+  };
+
+  const handleDeleteClick = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this item?")) {
+      try {
+        const response = await fetch(`/api/inventory/${id}`, {
+          method: "DELETE",
+        });
+        if (!response.ok) {
+          throw new Error("Failed to delete item");
+        }
+        setInventoryItems(inventoryItems.filter((item) => item._id !== id));
+      } catch (err: any) {
+        setError(err.message);
+      }
     }
   };
 
@@ -345,10 +375,17 @@ export default function Inventory() {
           </Button>
           <Button variant="outline">Export Data</Button>
         </div>
-        <DefaultTable
-          tableRows={inventoryItems}
-          onEditClick={handleEditClick}
-        />
+        {isLoading ? (
+          <p>Loading...</p>
+        ) : error ? (
+          <p className="text-red-500">{error}</p>
+        ) : (
+          <DefaultTable
+            tableRows={inventoryItems}
+            onEditClick={handleEditClick}
+            onDeleteClick={handleDeleteClick}
+          />
+        )}
       </main>
 
       {/* Add Inventory Modal */}
@@ -420,7 +457,7 @@ export default function Inventory() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
             <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-              Edit Inventory: {editingItem.name}
+              Edit Inventory: {editingItem.item}
             </h2>
             <form onSubmit={handleSaveEdit}>
               <div className="mb-4">

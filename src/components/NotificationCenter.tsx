@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Bell,
   CheckCircle,
@@ -12,31 +12,71 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { useAuth } from "../context/AuthContext";
 
 interface Notification {
-  id: string;
+  _id: string;
   title: string;
   description: string;
-  timestamp: string;
+  createdAt: string;
   severity: "info" | "warning" | "critical";
   read: boolean;
   action?: string;
 }
 
-interface NotificationCenterProps {
-  notifications: Notification[];
-  onMarkAsRead: (id: string) => void;
-  onTakeAction: (id: string, action: string) => void;
-  onClearAll: () => void;
-}
-
-const NotificationCenter: React.FC<NotificationCenterProps> = ({
-  notifications,
-  onMarkAsRead,
-  onTakeAction,
-  onClearAll,
-}) => {
+const NotificationCenter: React.FC = () => {
+  const { token } = useAuth();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("all");
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!token) return;
+      try {
+        const response = await fetch("/api/events", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!response.ok) throw new Error("Failed to fetch notifications");
+        const data = await response.json();
+        setNotifications(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchNotifications();
+  }, [token]);
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      const response = await fetch(`/api/events/${id}/read`, {
+        method: "PUT",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Failed to mark as read");
+      setNotifications(
+        notifications.map((n) => (n._id === id ? { ...n, read: true } : n))
+      );
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  const handleClearAll = async () => {
+    try {
+      const response = await fetch("/api/events", {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!response.ok) throw new Error("Failed to clear notifications");
+      setNotifications([]);
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
@@ -97,7 +137,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
           <Button
             variant="ghost"
             size="sm"
-            onClick={onClearAll}
+            onClick={handleClearAll}
             disabled={notifications.length === 0}
           >
             Clear all
@@ -123,11 +163,15 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
 
           <TabsContent value={activeTab} className="mt-0">
             <ScrollArea className="h-[320px] px-4">
-              {filteredNotifications.length > 0 ? (
+              {isLoading ? (
+                <p>Loading notifications...</p>
+              ) : error ? (
+                <p className="text-red-500">{error}</p>
+              ) : filteredNotifications.length > 0 ? (
                 <div className="space-y-2 py-2">
                   {filteredNotifications.map((notification) => (
                     <div
-                      key={notification.id}
+                      key={notification._id}
                       className={`p-3 rounded-lg border ${notification.read ? "bg-white" : "bg-muted/30"} ${notification.severity === "critical" ? "border-destructive/30" : notification.severity === "warning" ? "border-amber-500/30" : "border-green-500/30"}`}
                     >
                       <div className="flex justify-between items-start">
@@ -145,19 +189,15 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                             </p>
                             <div className="flex justify-between items-center mt-2">
                               <span className="text-xs text-muted-foreground">
-                                {notification.timestamp}
+                                {new Date(
+                                  notification.createdAt
+                                ).toLocaleString()}
                               </span>
                               {notification.action && (
                                 <Button
                                   variant="link"
                                   size="sm"
                                   className="p-0 h-auto text-xs flex items-center gap-1"
-                                  onClick={() =>
-                                    onTakeAction(
-                                      notification.id,
-                                      notification.action || "",
-                                    )
-                                  }
                                 >
                                   {notification.action}
                                   <ChevronRight className="h-3 w-3" />
@@ -171,7 +211,7 @@ const NotificationCenter: React.FC<NotificationCenterProps> = ({
                             variant="ghost"
                             size="sm"
                             className="h-6 w-6 p-0 rounded-full"
-                            onClick={() => onMarkAsRead(notification.id)}
+                            onClick={() => handleMarkAsRead(notification._id)}
                           >
                             <X className="h-3 w-3" />
                           </Button>

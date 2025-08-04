@@ -1,10 +1,13 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Monitor, Home, User, Settings } from "lucide-react";
+import { Monitor, Home, User, Settings, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
+import { useAuth } from "../context/AuthContext";
 
 const Sidebar = () => {
+  const { user } = useAuth();
+
   return (
     <aside className="hidden md:flex md:flex-col md:w-40 bg-background border-r">
       <div className="flex items-center justify-center h-16 px-6 border-b">
@@ -39,6 +42,20 @@ const Sidebar = () => {
           <Home className="mr-2 h-4 w-4" />
           Inventory
         </NavLink>
+        {user?.role === "admin" && (
+          <NavLink
+            to="/employees"
+            className={({ isActive }) =>
+              cn(
+                buttonVariants({ variant: isActive ? "secondary" : "ghost" }),
+                "w-full justify-start"
+              )
+            }
+          >
+            <Users className="mr-2 h-4 w-4" />
+            Employees
+          </NavLink>
+        )}
         <NavLink
           to="/profile"
           className={({ isActive }) =>

@@ -1,8 +1,18 @@
 import express from "express";
+import passport from "passport";
 import { getConnection } from "../config/db.js";
 import { ObjectId } from "mongodb";
 
 const router = express.Router();
+
+// Middleware to check for admin role
+const isAdmin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Forbidden: Admins only' });
+  }
+};
 
 const topicMap = {
   temp1: "Humidity/SenseHarvest",
@@ -55,5 +65,40 @@ router.get("/:sensorId", async (req, res) => {
     return res.status(500).json({ error: "Server error" });
   }
 });
+
+// Get sensor settings
+router.get(
+  "/settings",
+  passport.authenticate("jwt", { session: false }),
+  isAdmin,
+  async (req, res) => {
+    try {
+      const db = getConnection();
+      const settings = await db.collection("settings").findOne();
+      res.json(settings?.thresholds || {});
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  }
+);
+
+// Update sensor settings
+router.put(
+  "/settings",
+  passport.authenticate("jwt", { session: false }),
+  isAdmin,
+  async (req, res) => {
+    const { thresholds } = req.body;
+    try {
+      const db = getConnection();
+      await db
+        .collection("settings")
+        .updateOne({}, { $set: { thresholds } }, { upsert: true });
+      res.json({ message: "Settings updated successfully" });
+    } catch (err) {
+      res.status(500).json({ message: err.message });
+    }
+  }
+);
 
 export default router;

@@ -1,18 +1,13 @@
 import mongoose from "mongoose";
 
-const userSchema = mongoose.Schema(
+const employeeSchema = mongoose.Schema(
   {
-    username: {
-      type: String,
-      required: false,
-      unique: true,
-    },
-    email: {
+    cardId: {
       type: String,
       required: true,
       unique: true,
     },
-    password: {
+    name: {
       type: String,
       required: true,
     },
@@ -28,6 +23,6 @@ const userSchema = mongoose.Schema(
   }
 );
 
-const User = mongoose.model("User", userSchema);
+const Employee = mongoose.model("Employee", employeeSchema);
 
-export default User;
+export default Employee;
