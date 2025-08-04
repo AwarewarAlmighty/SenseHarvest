@@ -7,7 +7,12 @@ import Sidebar from "./components/Sidebar";
 import { useAuth } from "./context/AuthContext";
 import Login from "./pages/login";
 import Register from "./pages/register";
+import EmployeeLog from "./pages/EmployeeLog";
 import React from "react";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import RFIDToastListener from "./components/RFIDToastListener.js"
+
 
 // Helper component for protected routes
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
@@ -55,6 +60,14 @@ function App() {
             }
           />
           <Route
+            path="/EmployeesLogs"
+            element={
+              <ProtectedRoute>
+                <EmployeeLog/>
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/profile"
             element={
               <ProtectedRoute>
@@ -71,6 +84,8 @@ function App() {
             }
           />
         </Routes>
+        <RFIDToastListener />
+        <ToastContainer position="top-right" autoClose={3000} />
       </main>
     </div>
   );
