@@ -6,7 +6,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index.js",
-    "monitor": "node monitoring.js"
+    "monitor": "node monitoring.js",
+    "add-admin": "node scripts/addAdmin.js"
   },
   "keywords": [],
   "author": "",

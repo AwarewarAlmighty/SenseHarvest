@@ -8,8 +8,8 @@ import { connectDB, getConnection } from "./config/db.js";
 import { initializePassport } from "./auth.js";
 import sensorRoutes from "./routes/sensors.js";
 import inventory from "./routes/inventory.js";
-import employees from './routes/employees.js';
-import events from './routes/events.js';
+import employees from "./routes/employees.js";
+import events from "./routes/events.js";
 
 dotenv.config();
 
@@ -61,7 +61,7 @@ async function startServer() {
         if (err) {
           res.send(err);
         }
-        const payload = { id: user._id, email: user.email };
+        const payload = { id: user._id, email: user.email, role: user.role };
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
           expiresIn: "1d",
         });
