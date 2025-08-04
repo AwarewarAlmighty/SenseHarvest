@@ -8,6 +8,8 @@ import { connectDB, getConnection } from "./config/db.js";
 import { initializePassport } from "./auth.js";
 import sensorRoutes from "./routes/sensors.js";
 import inventory from "./routes/inventory.js";
+import employees from './routes/employees.js';
+import events from './routes/events.js';
 
 dotenv.config();
 
