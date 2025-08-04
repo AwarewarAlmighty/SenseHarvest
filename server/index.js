@@ -79,6 +79,8 @@ async function startServer() {
 
   app.use("/api/sensors", sensorRoutes);
   app.use("/api/inventory", inventory);
+  app.use("/api/employees", employees);
+  app.use("/api/events", events);
 
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
