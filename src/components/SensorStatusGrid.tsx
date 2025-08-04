@@ -33,7 +33,7 @@ interface SensorStatusGridProps {
 }
 
 const SensorStatusGrid: React.FC = () => {
-  const liveSensors = useWebSocket("ws://13.211.150.28:1880/ws/SenseHarvest");
+  const liveSensors = useWebSocket("ws://localhost:1880/ws/SenseHarvest/Sensors");
   const sensors = liveSensors ?? defaultSensors;
 
   const getStatusColor = (status: string) => {
@@ -84,59 +84,59 @@ const SensorStatusGrid: React.FC = () => {
         </Badge>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {sensors.map((sensor) => (
+        {sensors.map((sensor: SensorData) => (
           <Card
             key={sensor.id}
             className={`border-l-4 ${getStatusColor(sensor.status)} transition-all hover:shadow-md`}
           >
             <CardContent className="p-4">
               <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="font-medium text-gray-700">{sensor.name}</h3>
-                  <p className="text-gray-500 text-xs">{sensor.location}</p>
-                </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="mt-1">{getStatusIcon(sensor.status)}</div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        {sensor.status.charAt(0).toUpperCase() +
-                          sensor.status.slice(1)}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+          <div>
+            <h3 className="font-medium text-gray-700">{sensor.name}</h3>
+            <p className="text-gray-500 text-xs">{sensor.location}</p>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="mt-1">{getStatusIcon(sensor.status)}</div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+            {sensor.status.charAt(0).toUpperCase() +
+              sensor.status.slice(1)}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
               </div>
               <div className="mt-4 flex items-end justify-between">
-                <div className="flex items-baseline">
-                  <span className="text-2xl font-bold text-gray-900">
-                    {sensor.value}
-                  </span>
-                  <span className="ml-1 text-sm text-gray-600">
-                    {sensor.unit}
-                  </span>
+          <div className="flex items-baseline">
+            <span className="text-2xl font-bold text-gray-900">
+              {sensor.value}
+            </span>
+            <span className="ml-1 text-sm text-gray-600">
+              {sensor.unit}
+            </span>
+          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center">
+            {getTrendIcon(sensor.trend)}
                 </div>
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <div className="flex items-center">
-                        {getTrendIcon(sensor.trend)}
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>
-                        Trend:{" "}
-                        {sensor.trend.charAt(0).toUpperCase() +
-                          sensor.trend.slice(1)}
-                      </p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>
+            Trend:{" "}
+            {sensor.trend.charAt(0).toUpperCase() +
+              sensor.trend.slice(1)}
+                </p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
               </div>
               <div className="mt-2 text-xs text-gray-500">
-                Updated: {new Date(sensor.lastUpdated).toLocaleTimeString()}
+          Updated: {new Date(sensor.lastUpdated).toLocaleTimeString()}
               </div>
             </CardContent>
           </Card>

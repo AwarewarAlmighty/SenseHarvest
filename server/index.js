@@ -10,6 +10,7 @@ import sensorRoutes from "./routes/sensors.js";
 import inventory from "./routes/inventory.js";
 import employees from "./routes/employees.js";
 import events from "./routes/events.js";
+import employeeLogRoutes from "./routes/employeeLog.js";
 
 dotenv.config();
 

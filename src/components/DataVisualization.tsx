@@ -48,8 +48,6 @@ const generateValue = (base: number, range: number) => base + Math.random() * ra
 const sensorTemplates = [
   { id: "temp1", name: "Temperature", unit: "°C", color: "#FF6384", baseValue: 20, range: 5 },
   { id: "hum1", name: "Humidity", unit: "%", color: "#36A2EB", baseValue: 60, range: 20 },
-  { id: "soil1", name: "Soil Moisture", unit: "%", color: "#4BC0C0", baseValue: 40, range: 15 },
-  { id: "gas1", name: "CO2 Level", unit: "ppm", color: "#9966FF", baseValue: 400, range: 100 },
 ];
 
 const fetchSensorData = async (sensorId: string, range: string): Promise<SensorData> => {
@@ -100,7 +98,7 @@ const DataVisualization = () => {
 
   useEffect(() => {
   const loadData = async () => {
-    const sensorIds = ["temp1", "hum1", "soil1", "gas1"];
+    const sensorIds = ["temp1", "hum1"];
     const data = await Promise.all(sensorIds.map(id => fetchSensorData(id, "realtime")));
     setRealtimeData(data);
   };
@@ -113,7 +111,7 @@ const DataVisualization = () => {
   setIsLoading(true);
 
   try {
-    const sensorIds = ["temp1", "hum1", "soil1", "gas1"];
+    const sensorIds = ["temp1", "hum1" ];
 
     const [
       realtime,
