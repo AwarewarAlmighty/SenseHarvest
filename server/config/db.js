@@ -9,6 +9,7 @@ const connectDB = async () => {
       // These options are recommended for new connections to avoid deprecation warnings
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      dbName: "SenseHarvest",
     });
     console.log("MongoDB connected successfully!"); // Log success message
     connection = conn.connection;
