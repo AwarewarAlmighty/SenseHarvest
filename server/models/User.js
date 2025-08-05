@@ -22,6 +22,12 @@ const userSchema = mongoose.Schema(
       enum: ['employee', 'admin'],
       default: 'employee',
     },
+    status: {
+      type: String,
+      required: true,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending',
+    },
   },
   {
     timestamps: true,
