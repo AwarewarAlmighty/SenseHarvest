@@ -1,5 +1,6 @@
 // Inventory.jsx (or Inventory.tsx)
 import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "../context/AuthContext";
 import {
   DropdownMenu,
@@ -37,13 +38,13 @@ const DefaultTable: React.FC<DefaultTableProps> = ({
   const TABLE_HEAD = ["Item", "Place", "Amount", ""];
 
   return (
-    <div className="p-4 bg-white shadow-md rounded-lg overflow-x-auto mt-4">
+    <div className="p-4 bg-card shadow-md rounded-lg overflow-x-auto mt-4">
       <table className="w-full min-w-max table-auto text-left">
         <thead>
           <tr className="bg-gray-50">
             {TABLE_HEAD.map((head, index) => (
               <th key={index} className="p-4 border-b border-gray-200">
-                <p className="font-semibold text-sm text-gray-700 leading-none opacity-70">
+                <p className="font-semibold text-sm text-muted-foreground leading-none opacity-70">
                   {head}
                 </p>
               </th>
@@ -58,17 +59,17 @@ const DefaultTable: React.FC<DefaultTableProps> = ({
             return (
               <tr key={rowData._id}>
                 <td className={classes}>
-                  <p className="font-normal text-sm text-gray-800">
+                  <p className="font-normal text-sm text-foreground">
                     {rowData.item}
                   </p>
                 </td>
                 <td className={classes}>
-                  <p className="font-normal text-sm text-gray-800">
+                  <p className="font-normal text-sm text-foreground">
                     {rowData.place}
                   </p>
                 </td>
                 <td className={classes}>
-                  <p className="font-normal text-sm text-gray-800">
+                  <p className="font-normal text-sm text-foreground">
                     {rowData.amount}
                   </p>
                 </td>
@@ -389,46 +390,57 @@ export default function Inventory() {
       </main>
 
       {/* Add Inventory Modal */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
-              Add New Inventory Item
-            </h2>
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="bg-card p-6 rounded-lg shadow-xl w-full max-w-md"
+            >
+              <h2 className="text-xl font-bold mb-4 text-foreground">
+                Add New Inventory Item
+              </h2>
             <form onSubmit={handleAddItem}>
               <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
+                <label className="block text-muted-foreground text-sm font-bold mb-2">
                   Name
                 </label>
                 <input
                   type="text"
                   value={newItemName}
                   onChange={(e) => setNewItemName(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-foreground leading-tight focus:outline-none focus:shadow-outline"
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
+                <label className="block text-muted-foreground text-sm font-bold mb-2">
                   Place
                 </label>
                 <input
                   type="text"
                   value={newItemPlace}
                   onChange={(e) => setNewItemPlace(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-foreground leading-tight focus:outline-none focus:shadow-outline"
                   required
                 />
               </div>
               <div className="mb-6">
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
+                <label className="block text-muted-foreground text-sm font-bold mb-2">
                   Amount
                 </label>
                 <input
                   type="text"
                   value={newItemAmount}
                   onChange={(e) => setNewItemAmount(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-foreground leading-tight focus:outline-none focus:shadow-outline"
                   required
                 />
               </div>
@@ -448,39 +460,40 @@ export default function Inventory() {
                 </button>
               </div>
             </form>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       )}
+      </AnimatePresence>
 
       {/* Edit Inventory Modal */}
       {isEditModalOpen && editingItem && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl w-full max-w-md">
-            <h2 className="text-xl font-bold mb-4 text-gray-900 dark:text-white">
+          <div className="bg-card p-6 rounded-lg shadow-xl w-full max-w-md">
+            <h2 className="text-xl font-bold mb-4 text-foreground">
               Edit Inventory: {editingItem.item}
             </h2>
             <form onSubmit={handleSaveEdit}>
               <div className="mb-4">
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
+                <label className="block text-muted-foreground text-sm font-bold mb-2">
                   Place
                 </label>
                 <input
                   type="text"
                   value={editedPlace}
                   onChange={(e) => setEditedPlace(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-foreground leading-tight focus:outline-none focus:shadow-outline"
                   required
                 />
               </div>
               <div className="mb-6">
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-bold mb-2">
+                <label className="block text-muted-foreground text-sm font-bold mb-2">
                   Amount
                 </label>
                 <input
                   type="text"
                   value={editedAmount}
                   onChange={(e) => setEditedAmount(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline dark:bg-gray-700 dark:text-white dark:border-gray-600"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-foreground leading-tight focus:outline-none focus:shadow-outline"
                   required
                 />
               </div>

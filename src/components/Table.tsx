@@ -70,13 +70,13 @@ export default function DefaultTable() {
   };
 
   return (
-    <div className="p-4 bg-white shadow-md rounded-lg overflow-x-auto">
+    <div className="p-4 bg-card shadow-md rounded-lg overflow-x-auto">
       <table className="w-full min-w-max table-auto text-left">
         <thead>
           <tr className="bg-gray-50">
             {TABLE_HEAD.map((head, index) => (
               <th key={index} className="p-4 border-b border-gray-200">
-                <p className="font-semibold text-sm text-gray-700 leading-none opacity-70">
+                <p className="font-semibold text-sm text-muted-foreground leading-none opacity-70">
                   {head}
                 </p>
               </th>
@@ -91,17 +91,17 @@ export default function DefaultTable() {
             return (
               <tr key={rowData.name}>
                 <td className={classes}>
-                  <p className="font-normal text-sm text-gray-800">
+                  <p className="font-normal text-sm text-foreground">
                     {rowData.name}
                   </p>
                 </td>
                 <td className={classes}>
-                  <p className="font-normal text-sm text-gray-800">
+                  <p className="font-normal text-sm text-foreground">
                     {rowData.place}
                   </p>
                 </td>
                 <td className={classes}>
-                  <p className="font-normal text-sm text-gray-800">
+                  <p className="font-normal text-sm text-foreground">
                     {rowData.amount}
                   </p>
                 </td>
@@ -134,7 +134,7 @@ export default function DefaultTable() {
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">
+          <div className="bg-card p-6 rounded-lg shadow-xl w-full max-w-md">
             <h2 className="text-xl font-bold mb-4">
               Edit Inventory: {selectedRow?.name}
             </h2>
@@ -145,25 +145,25 @@ export default function DefaultTable() {
               }}
             >
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label className="block text-foreground text-sm font-bold mb-2">
                   Place
                 </label>
                 <input
                   type="text"
                   value={editedPlace}
                   onChange={(e) => setEditedPlace(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-foreground leading-tight focus:outline-none focus:shadow-outline"
                 />
               </div>
               <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
+                <label className="block text-foreground text-sm font-bold mb-2">
                   Amount
                 </label>
                 <input
                   type="text"
                   value={editedAmount}
                   onChange={(e) => setEditedAmount(e.target.value)}
-                  className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                  className="shadow appearance-none border rounded w-full py-2 px-3 text-foreground leading-tight focus:outline-none focus:shadow-outline"
                 />
               </div>
               <div className="flex justify-end gap-2">

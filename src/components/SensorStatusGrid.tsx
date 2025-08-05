@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import useWebSocket from "../hooks/useWebSocket";
@@ -39,13 +40,13 @@ const SensorStatusGrid: React.FC = () => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case "normal":
-        return "bg-green-100 text-green-800 border-green-300";
+        return "bg-green-500 text-white border-green-300";
       case "warning":
-        return "bg-yellow-100 text-yellow-800 border-yellow-300";
+        return "bg-yellow-500 text-white border-yellow-300";
       case "critical":
-        return "bg-red-100 text-red-800 border-red-300";
+        return "bg-red-500 text-white border-red-300";
       default:
-        return "bg-gray-100 text-gray-800 border-gray-300";
+        return "bg-gray-500 text-white border-gray-300";
     }
   };
 
@@ -75,25 +76,50 @@ const SensorStatusGrid: React.FC = () => {
     }
   };
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const cardVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+    },
+  };
+
   return (
-    <div className="bg-white p-6 rounded-lg shadow-sm">
+    <div className="bg-card p-6 rounded-lg shadow-sm">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-xl font-semibold text-gray-800">Sensor Status</h2>
+        <h2 className="text-xl font-semibold text-foreground">Sensor Status</h2>
         <Badge variant="outline" className="text-xs">
           Last updated: {new Date().toLocaleTimeString()}
         </Badge>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <motion.div
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
         {sensors.map((sensor: SensorData) => (
-          <Card
-            key={sensor.id}
-            className={`border-l-4 ${getStatusColor(sensor.status)} transition-all hover:shadow-md`}
-          >
-            <CardContent className="p-4">
-              <div className="flex justify-between items-start">
-          <div>
-            <h3 className="font-medium text-gray-700">{sensor.name}</h3>
-            <p className="text-gray-500 text-xs">{sensor.location}</p>
+          <motion.div key={sensor.id} variants={cardVariants}>
+            <Card
+              className={`border-l-4 ${getStatusColor(
+                sensor.status
+              )} transition-all hover:shadow-md`}
+            >
+              <CardContent className="p-4">
+                <div className="flex justify-between items-start">
+                  <div>
+            <h3 className="font-medium text-gray-900">{sensor.name}</h3>
+            <p className="text-gray-700 text-xs">{sensor.location}</p>
           </div>
           <TooltipProvider>
             <Tooltip>
@@ -114,7 +140,7 @@ const SensorStatusGrid: React.FC = () => {
             <span className="text-2xl font-bold text-gray-900">
               {sensor.value}
             </span>
-            <span className="ml-1 text-sm text-gray-600">
+            <span className="ml-1 text-sm text-gray-700">
               {sensor.unit}
             </span>
           </div>
@@ -135,13 +161,14 @@ const SensorStatusGrid: React.FC = () => {
             </Tooltip>
           </TooltipProvider>
               </div>
-              <div className="mt-2 text-xs text-gray-500">
+              <div className="mt-2 text-xs text-gray-700">
           Updated: {new Date(sensor.lastUpdated).toLocaleTimeString()}
               </div>
             </CardContent>
           </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
     </div>
   );
 };

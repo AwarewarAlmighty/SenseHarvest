@@ -55,7 +55,7 @@ const RFIDToastListener: React.FC = () => {
     <Modal
       isOpen={showModal}
       onRequestClose={() => setShowModal(false)}
-      className="p-6 flex flex-col bg-white rounded shadow-lg max-w-md mx-auto mt-32 gap-2"
+      className="p-6 flex flex-col bg-card rounded shadow-lg max-w-md mx-auto mt-32 gap-2"
       overlayClassName="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-start"
     >
       <h2 className="text-lg font-bold mb-4">Register Unrecognized UID</h2>

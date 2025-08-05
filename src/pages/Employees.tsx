@@ -7,15 +7,26 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface Employee {
   _id: string;
-  cardId: string;
+  uid: string;
   name: string;
   role: string;
 }
 
+type Log = {
+  uid: string;
+  payload: {
+    UID: string;
+    status: string;
+    timestamp: string;
+    name: string;
+  };
+};
+
 const Employees = () => {
   const { token } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
-  const [cardId, setCardId] = useState('');
+  const [logs, setLogs] = useState<Log[]>([]);
+  const [uid, setUid] = useState('');
   const [name, setName] = useState('');
   const [role, setRole] = useState('employee');
   const [error, setError] = useState<string | null>(null);
@@ -38,8 +49,26 @@ const Employees = () => {
       }
     };
 
+    const fetchLogs = async () => {
+      try {
+        const response = await fetch('/api/employees/logs', {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch logs');
+        }
+        const data = await response.json();
+        setLogs(data);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+
     if (token) {
       fetchEmployees();
+      fetchLogs();
     }
   }, [token]);
 
@@ -52,14 +81,14 @@ const Employees = () => {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ cardId, name, role }),
+        body: JSON.stringify({ uid, name, role }),
       });
       if (!response.ok) {
         throw new Error('Failed to add employee');
       }
       const newEmployee = await response.json();
       setEmployees([...employees, newEmployee]);
-      setCardId('');
+      setUid('');
       setName('');
       setRole('employee');
     } catch (err: any) {
@@ -86,9 +115,20 @@ const Employees = () => {
     }
   };
 
+  const getEmployeeStatus = (uid: string) => {
+    const employeeLogs = logs.filter((log) => log.payload.UID === uid);
+    if (employeeLogs.length === 0) {
+      return { status: 'unknown', timestamp: null };
+    }
+    const latestLog = employeeLogs.reduce((latest, current) => {
+      return new Date(current.payload.timestamp) > new Date(latest.payload.timestamp) ? current : latest;
+    });
+    return { status: latestLog.payload.status, timestamp: latestLog.payload.timestamp };
+  };
+
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Manage Employees</h1>
+      <h1 className="text-2xl font-bold mb-4 text-foreground">Manage Employees</h1>
       {error && <p className="text-red-500">{error}</p>}
       <Card className="mb-4">
         <CardHeader>
@@ -98,11 +138,11 @@ const Employees = () => {
           <form onSubmit={handleAddEmployee}>
             <div className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="cardId">Card ID</Label>
+                <Label htmlFor="uid">UID</Label>
                 <Input
-                  id="cardId"
-                  value={cardId}
-                  onChange={(e) => setCardId(e.target.value)}
+                  id="uid"
+                  value={uid}
+                  onChange={(e) => setUid(e.target.value)}
                   required
                 />
               </div>
@@ -140,28 +180,42 @@ const Employees = () => {
           <table className="w-full">
             <thead>
               <tr>
-                <th className="text-left">Card ID</th>
-                <th className="text-left">Name</th>
-                <th className="text-left">Role</th>
+                <th className="text-left text-foreground">UID</th>
+                <th className="text-left text-foreground">Name</th>
+                <th className="text-left text-foreground">Role</th>
+                <th className="text-left text-foreground">Status</th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {employees.map((emp) => (
-                <tr key={emp._id}>
-                  <td>{emp.cardId}</td>
-                  <td>{emp.name}</td>
-                  <td>{emp.role}</td>
-                  <td>
-                    <Button
-                      variant="destructive"
-                      onClick={() => handleDeleteEmployee(emp._id)}
-                    >
-                      Delete
-                    </Button>
-                  </td>
-                </tr>
-              ))}
+              {employees.map((emp) => {
+                const { status } = getEmployeeStatus(emp.uid);
+                return (
+                  <tr key={emp._id}>
+                    <td className="text-foreground">{emp.uid}</td>
+                    <td className="text-foreground">{emp.name}</td>
+                    <td className="text-foreground">{emp.role}</td>
+                    <td className="text-foreground">
+                      <div className="flex items-center">
+                        <span
+                          className={`h-2 w-2 rounded-full mr-2 ${
+                            status === 'accepted' ? 'bg-green-500' : 'bg-red-500'
+                          }`}
+                        ></span>
+                        {status}
+                      </div>
+                    </td>
+                    <td>
+                      <Button
+                        variant="destructive"
+                        onClick={() => handleDeleteEmployee(emp._id)}
+                      >
+                        Delete
+                      </Button>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </CardContent>

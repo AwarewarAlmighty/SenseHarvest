@@ -84,6 +84,7 @@ async function startServer() {
   app.use("/api/inventory", inventory);
   app.use("/api/employees", employees);
   app.use("/api/events", events);
+  app.use("/api/employees/logs", employeeLogRoutes);
 
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

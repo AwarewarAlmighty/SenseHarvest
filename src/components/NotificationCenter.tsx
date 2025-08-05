@@ -122,7 +122,7 @@ const NotificationCenter: React.FC = () => {
   };
 
   return (
-    <Card className="w-full h-full bg-white shadow-md">
+    <Card className="w-full h-full shadow-md">
       <CardHeader className="pb-2">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
@@ -172,7 +172,7 @@ const NotificationCenter: React.FC = () => {
                   {filteredNotifications.map((notification) => (
                     <div
                       key={notification._id}
-                      className={`p-3 rounded-lg border ${notification.read ? "bg-white" : "bg-muted/30"} ${notification.severity === "critical" ? "border-destructive/30" : notification.severity === "warning" ? "border-amber-500/30" : "border-green-500/30"}`}
+                      className={`p-3 rounded-lg border ${notification.read ? "bg-card" : "bg-muted/30"} ${notification.severity === "critical" ? "border-destructive/30" : notification.severity === "warning" ? "border-amber-500/30" : "border-green-500/30"}`}
                     >
                       <div className="flex justify-between items-start">
                         <div className="flex gap-3">
