@@ -36,7 +36,11 @@ const AdminApproval: React.FC = () => {
       const data = await response.json();
       setUsers(data);
     } catch (err) {
-      setError(err.message);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred");
+      }
     }
   };
 
@@ -60,7 +64,11 @@ const AdminApproval: React.FC = () => {
       // Refresh the list after approval
       fetchPendingUsers();
     } catch (err) {
-      setError(err.message);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred");
+      }
     }
   };
 
@@ -78,7 +86,11 @@ const AdminApproval: React.FC = () => {
       // Refresh the list after rejection
       fetchPendingUsers();
     } catch (err) {
-      setError(err.message);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("An unknown error occurred");
+      }
     }
   };
 
