@@ -97,6 +97,33 @@ async function startServer() {
     })(req, res, next);
   });
 
+  app.post("/api/employees", async (req, res) => {
+        const { uid, name, department = "Default" } = req.body;
+
+        if (!uid || !name) {
+            return res.status(400).json({ message: "UID and name are required." });
+        }
+
+        try {
+            const db = getConnection();
+            const employees = db.collection("employees");
+
+            const normalizeUID = (uid) => uid.trim().toUpperCase().replace(/\s+/g, " ");
+            const normalizedUID = normalizeUID(uid);
+
+            const exists = await employees.findOne({ uid: normalizedUID });
+            if (exists) {
+            return res.status(400).json({ message: "UID already registered" });
+            }
+
+            await employees.insertOne({ uid: normalizedUID, cardId: normalizedUID, name, department });
+            res.status(201).json({ message: "Employee registered" });
+        } catch (error) {
+            console.error("Registration error:", error);
+            res.status(500).json({ message: "Failed to register employee" });
+        }
+    });
+
   app.get(
     "/api/auth/me",
     passport.authenticate("jwt", { session: false }),
