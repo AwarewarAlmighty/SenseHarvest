@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
-import NavBar from "../components/NavBar";
+import MainHeader from "../components/MainHeader";
 
 type Log = {
   uid: string;
@@ -42,7 +42,7 @@ const EmployeeLog = () => {
 
   return (
     <div className="min-h-screen bg-background">
-      <NavBar />
+      <MainHeader />
       <main className="container py-6">
         <div className="mb-6">
           <h2 className="text-3xl font-bold tracking-tight">Employee Entry & Exit Logs</h2>
@@ -137,4 +137,3 @@ const EmployeeLog = () => {
 };
 
 export default EmployeeLog;
-

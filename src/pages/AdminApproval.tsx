@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
+import MainHeader from "../components/MainHeader";
 
 interface PendingUser {
   _id: string;
@@ -99,43 +100,46 @@ const AdminApproval: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-2xl font-bold mb-4">Admin Approval</h1>
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Username</TableHead>
-            <TableHead>Email</TableHead>
-            <TableHead>Requested Role</TableHead>
-            <TableHead>Date</TableHead>
-            <TableHead>Actions</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {users.map((user) => (
-            <TableRow key={user._id}>
-              <TableCell>{user.username}</TableCell>
-              <TableCell>{user.email}</TableCell>
-              <TableCell>{user.role}</TableCell>
-              <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
-              <TableCell>
-                <Button
-                  onClick={() => handleApprove(user._id)}
-                  className="mr-2"
-                >
-                  Approve
-                </Button>
-                <Button
-                  onClick={() => handleReject(user._id)}
-                  variant="destructive"
-                >
-                  Reject
-                </Button>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+    <div className="min-h-screen bg-background">
+        <MainHeader />
+        <main className="container mx-auto py-10">
+            <h1 className="text-2xl font-bold mb-4">Admin Approval</h1>
+            <Table>
+                <TableHeader>
+                <TableRow>
+                    <TableHead>Username</TableHead>
+                    <TableHead>Email</TableHead>
+                    <TableHead>Requested Role</TableHead>
+                    <TableHead>Date</TableHead>
+                    <TableHead>Actions</TableHead>
+                </TableRow>
+                </TableHeader>
+                <TableBody>
+                {users.map((user) => (
+                    <TableRow key={user._id}>
+                    <TableCell>{user.username}</TableCell>
+                    <TableCell>{user.email}</TableCell>
+                    <TableCell>{user.role}</TableCell>
+                    <TableCell>{new Date(user.createdAt).toLocaleDateString()}</TableCell>
+                    <TableCell>
+                        <Button
+                        onClick={() => handleApprove(user._id)}
+                        className="mr-2"
+                        >
+                        Approve
+                        </Button>
+                        <Button
+                        onClick={() => handleReject(user._id)}
+                        variant="destructive"
+                        >
+                        Reject
+                        </Button>
+                    </TableCell>
+                    </TableRow>
+                ))}
+                </TableBody>
+            </Table>
+        </main>
     </div>
   );
 };
