@@ -2,61 +2,174 @@ import React, { useEffect, useState } from "react";
 import { useAuth } from "../context/AuthContext";
 import { ModeToggle } from "./theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Settings, LogOut, Sun, Cloud, Zap } from "lucide-react";
+import { Bell, Settings, LogOut, Sun, Cloud, Zap, CloudFog, CloudRain, Snowflake, Wind, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
-// --- Compact Weather Component for Header ---
+
+// --- Weather Component with Live, User-configurable Data ---
 const WeatherHeader = () => {
-  const [weather, setWeather] = useState<{
-    location: string;
-    temperature: number;
-    condition: string;
-  } | null>(null);
+  const [location, setLocation] = useState<{ name: string; latitude: number; longitude: number; } | null>(null);
+  const [weather, setWeather] = useState<{ temperature: number; weatherCode: number; windSpeed: number; } | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [locationInput, setLocationInput] = useState("");
 
+  // Load saved location from localStorage on initial render
   useEffect(() => {
-    // Mock API call to fetch weather data for Bekasi.
-    const fetchWeather = () => {
-      const mockWeatherData = {
-        location: "Bekasi, ID",
-        temperature: 31,
-        condition: "Partly Cloudy",
-      };
-      setWeather(mockWeatherData);
+    const savedLocation = localStorage.getItem("weatherLocation");
+    if (savedLocation) {
+      setLocation(JSON.parse(savedLocation));
+    } else {
+      // Default to Bekasi if no location is saved
+      setLocation({ name: "Bekasi", latitude: -6.2383, longitude: 106.9756 });
+    }
+  }, []);
+
+  // Fetch weather data whenever the location changes
+  useEffect(() => {
+    if (!location) return;
+
+    const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${location.latitude}&longitude=${location.longitude}&current=temperature_2m,weather_code,wind_speed_10m`;
+
+    const fetchWeather = async () => {
+      setError(null);
+      setWeather(null); // Reset weather data on new fetch
+      try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("Failed to fetch weather data.");
+        
+        const data = await response.json();
+        setWeather({
+          temperature: Math.round(data.current.temperature_2m),
+          weatherCode: data.current.weathercode,
+          windSpeed: Math.round(data.current.wind_speed_10m),
+        });
+      } catch (err) {
+        setError("Could not load weather.");
+        console.error(err);
+      }
     };
 
     fetchWeather();
-  }, []);
+  }, [location]);
 
-  const getWeatherIcon = (condition: string) => {
-    switch (condition) {
-      case "Sunny":
-        return <Sun className="h-6 w-6 text-yellow-500" />;
-      case "Partly Cloudy":
-        return <Cloud className="h-6 w-6 text-gray-400" />;
-      case "Rain":
-        return <Zap className="h-6 w-6 text-blue-500" />;
-      default:
-        return <Cloud className="h-6 w-6 text-gray-400" />;
+  const handleLocationChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!locationInput) return;
+
+    try {
+      const geoUrl = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(locationInput)}&count=1&language=en&format=json`;
+      const response = await fetch(geoUrl);
+      const data = await response.json();
+
+      if (data.results && data.results.length > 0) {
+        const newLocation = {
+            name: data.results[0].name,
+            latitude: data.results[0].latitude,
+            longitude: data.results[0].longitude,
+        };
+        setLocation(newLocation);
+        localStorage.setItem("weatherLocation", JSON.stringify(newLocation));
+      } else {
+        setError("Location not found.");
+      }
+    } catch (err) {
+      setError("Failed to find location.");
+      console.error(err);
     }
   };
 
-  if (!weather) {
-    return <div className="text-sm text-muted-foreground">Loading weather...</div>;
-  }
+
+  const getWeatherInfo = (code: number): { icon: React.ReactNode; condition: string } => {
+    switch (code) {
+      case 0:
+        return { icon: <Sun className="h-6 w-6 text-yellow-500" />, condition: "Clear Sky" };
+      case 1:
+      case 2:
+      case 3:
+        return { icon: <Cloud className="h-6 w-6 text-gray-400" />, condition: "Partly Cloudy" };
+      case 45:
+      case 48:
+        return { icon: <CloudFog className="h-6 w-6 text-gray-400" />, condition: "Fog" };
+      case 51:
+      case 53:
+      case 55:
+        return { icon: <CloudRain className="h-6 w-6 text-blue-400" />, condition: "Drizzle" };
+      case 61:
+      case 63:
+      case 65:
+        return { icon: <CloudRain className="h-6 w-6 text-blue-500" />, condition: "Rain" };
+      case 71:
+      case 73:
+      case 75:
+      case 77:
+          return { icon: <Snowflake className="h-6 w-6 text-blue-300" />, condition: "Snow" };
+      case 95:
+      case 96:
+      case 99:
+        return { icon: <Zap className="h-6 w-6 text-yellow-400" />, condition: "Thunderstorm" };
+      default:
+        return { icon: <Cloud className="h-6 w-6 text-gray-400" />, condition: "Cloudy" };
+    }
+  };
 
   return (
-    <div className="flex items-center gap-3">
-      {getWeatherIcon(weather.condition)}
-      <div>
-        <p className="font-semibold">{weather.temperature}°C</p>
-        <p className="text-xs text-muted-foreground">{weather.condition}</p>
-      </div>
+    <div className="flex items-center gap-4">
+        {weather ? (
+            <>
+                <div className="flex items-center gap-2">
+                    {getWeatherInfo(weather.weatherCode).icon}
+                    <div>
+                        <p className="font-semibold">{weather.temperature}°C</p>
+                        <p className="text-xs text-muted-foreground">{getWeatherInfo(weather.weatherCode).condition}</p>
+                    </div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <Wind className="h-5 w-5 text-gray-400" />
+                    <div>
+                        <p className="font-semibold">{weather.windSpeed} km/h</p>
+                        <p className="text-xs text-muted-foreground">Wind</p>
+                    </div>
+                </div>
+            </>
+        ) : (
+             <div className="text-sm text-muted-foreground">{error || "Loading weather..."}</div>
+        )}
+        
+        <Popover>
+            <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon">
+                    <MapPin className="h-5 w-5" />
+                </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-80">
+                <form onSubmit={handleLocationChange} className="grid gap-4">
+                    <div className="space-y-2">
+                        <h4 className="font-medium leading-none">Change Location</h4>
+                        <p className="text-sm text-muted-foreground">
+                            Current: {location?.name || 'Not set'}
+                        </p>
+                    </div>
+                    <div className="grid gap-2">
+                        <Input
+                            id="location"
+                            placeholder="Enter city name..."
+                            value={locationInput}
+                            onChange={(e) => setLocationInput(e.target.value)}
+                            className="col-span-2 h-8"
+                        />
+                         <Button type="submit">Set Location</Button>
+                    </div>
+                </form>
+            </PopoverContent>
+      </Popover>
     </div>
   );
 };
