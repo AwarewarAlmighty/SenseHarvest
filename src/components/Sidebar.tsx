@@ -80,27 +80,24 @@ const Sidebar = () => {
           alt="SenseHarvest Logo"
           className="h-8 w-8 rounded-md"
         />
-         <h1 className="text-xl font-bold ml-2">SenseHarvest</h1>
+         {isOpen && <h1 className="text-xl font-bold ml-2 whitespace-nowrap">SenseHarvest</h1>}
       </div>
 
       {/* AI Chatbot Trigger */}
-      <div className="px-2 mb-4">
+      <div className="px-2 my-4">
          <AIChatbot 
             onSendMessage={handleSendMessage}
             trigger={
-                <Button variant="outline" className="w-full justify-start">
-                    <Bot className="mr-2 h-4 w-4" />
-                    Ask AI
+                <Button variant="outline" className={cn("w-full justify-start", isOpen ? "px-4" : "px-2")}>
+                    <Bot className={cn("h-4 w-4", isOpen && "mr-2")} />
+                    {isOpen && <span className="whitespace-nowrap">Ask AI</span>}
                 </Button>
             }
          />
       </div>
 
-
-      <nav className="flex-1 px-2 space-y-2">
-        {isOpen && <span className="ml-2 text-lg font-semibold whitespace-nowrap">SenseHarvest</span>}
-      </div>
-      <nav className="flex-1 px-2 py-6 space-y-2">
+      {/* Main Navigation Links */}
+      <nav className="px-2 space-y-2">
         <NavLink
           to="/"
           className={({ isActive }) =>
@@ -198,6 +195,8 @@ const Sidebar = () => {
           {isOpen && <span className="whitespace-nowrap">Settings</span>}
         </NavLink>
       </nav>
+
+      {/* Sidebar Toggle */}
       <div className="absolute top-1/2 -right-3 transform -translate-y-1/2">
         <button
           onClick={toggleSidebar}
