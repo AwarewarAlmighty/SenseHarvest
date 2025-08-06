@@ -192,7 +192,7 @@ const InventoryInfoCard = () => {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle className="text-lg">Inventory Info</CardTitle>
+        <CardTitle className="text-lg">Environment Info</CardTitle>
         <CardDescription>Real-time environmental conditions.</CardDescription>
       </CardHeader>
       <CardContent>
