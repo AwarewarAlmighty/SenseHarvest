@@ -95,7 +95,7 @@ const EmployeeLogCard = () => (
 );
 
 const InventoryInfoCard = () => {
-  const liveSensors = useWebSocket("ws://52.65.165.101:1880/ws/SenseHarvest");
+  const liveSensors = useWebSocket("ws://localhost:1880/ws/SenseHarvest/Sensors");
     const sensors = liveSensors ?? [
         { name: 'Temperature', value: 24.5, unit: '°C', status: 'normal' },
         { name: 'Humidity', value: 68, unit: '%', status: 'warning' },
