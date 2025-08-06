@@ -11,6 +11,8 @@ import inventory from "./routes/inventory.js";
 import employees from "./routes/employees.js";
 import events from "./routes/events.js";
 import employeeLogRoutes from "./routes/employeeLog.js";
+import adminRoutes from "./routes/admin.js";
+import User from "./models/User.js";
 
 dotenv.config();
 
@@ -29,22 +31,33 @@ async function startServer() {
 
   // REGISTRATION ROUTE
   app.post("/api/auth/register", async (req, res) => {
-    const { email, password } = req.body;
-    if (!email || !password) {
+    const { username, email, password, role } = req.body;
+    if (!username || !email || !password) {
       return res
         .status(400)
-        .json({ message: "Email and password are required." });
+        .json({ message: "Username, email, and password are required." });
     }
     try {
-      const db = getConnection();
-      const users = db.collection("users");
-      const existingUser = await users.findOne({ email });
+      const existingUser = await User.findOne({
+        $or: [{ email }, { username }],
+      });
       if (existingUser) {
-        return res.status(400).json({ message: "User already exists." });
+        return res
+          .status(400)
+          .json({ message: "Username or email already exists." });
       }
       const hashedPassword = await bcrypt.hash(password, 10);
-      await users.insertOne({ email, password: hashedPassword });
-      res.status(201).json({ message: "User created successfully" });
+      const newUser = {
+        username,
+        email,
+        password: hashedPassword,
+        role: role || "employee",
+      };
+      await User.create(newUser);
+      res.status(201).json({
+        message:
+          "User registered successfully. Your account is pending approval.",
+      });
     } catch (err) {
       res.status(500).json({ message: "Server error during registration." });
     }
@@ -58,6 +71,19 @@ async function startServer() {
           message: info ? info.message : "Login failed",
         });
       }
+
+      // Check user status
+      if (user.status === "pending") {
+        return res
+          .status(401)
+          .json({ message: "Your account is pending approval." });
+      }
+      if (user.status === "rejected") {
+        return res
+          .status(401)
+          .json({ message: "Your account has been rejected." });
+      }
+
       req.login(user, { session: false }, (err) => {
         if (err) {
           res.send(err);
@@ -112,6 +138,7 @@ async function startServer() {
   app.use("/api/employees", employees);
   app.use("/api/events", events);
   app.use("/api/employees/logs", employeeLogRoutes);
+  app.use("/api/admin", adminRoutes);
 
   app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);

@@ -1,6 +1,6 @@
 import React from "react";
 import { NavLink } from "react-router-dom";
-import { Monitor, Home, User, Settings, Users } from "lucide-react";
+import { Monitor, Home, User, Settings, Users, UserCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { buttonVariants } from "@/components/ui/button";
 import { useAuth } from "../context/AuthContext";
@@ -54,6 +54,20 @@ const Sidebar = () => {
           >
             <Users className="mr-2 h-4 w-4" />
             Employees
+          </NavLink>
+        )}
+        {user?.role === "admin" && (
+          <NavLink
+            to="/admin-approval"
+            className={({ isActive }) =>
+              cn(
+                buttonVariants({ variant: isActive ? "secondary" : "ghost" }),
+                "w-full justify-start"
+              )
+            }
+          >
+            <UserCheck className="mr-2 h-4 w-4" />
+            Approval
           </NavLink>
         )}
         <NavLink

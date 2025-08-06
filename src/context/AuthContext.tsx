@@ -43,7 +43,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const decoded: User = jwtDecode(token);
       setUser(decoded);
       setIsAuthenticated(true);
-      navigate("/");
     } catch (error) {
       console.error("Invalid token:", error);
       logout();

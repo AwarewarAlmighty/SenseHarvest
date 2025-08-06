@@ -12,6 +12,7 @@ import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 
 function Register() {
+  const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -29,7 +30,7 @@ function Register() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, email, password }),
       });
 
       const data = await response.json();
@@ -53,12 +54,23 @@ function Register() {
         <CardHeader>
           <CardTitle className="text-2xl">Register</CardTitle>
           <CardDescription>
-            Enter your email and password to create an account.
+            Enter your details to create an account.
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit}>
             <div className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  type="text"
+                  placeholder="john.doe"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  required
+                />
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
