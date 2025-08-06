@@ -34,7 +34,7 @@ interface SensorStatusGridProps {
 }
 
 const SensorStatusGrid: React.FC = () => {
-  const liveSensors = useWebSocket("ws://52.65.165.101:1880/ws/SenseHarvest");
+  const liveSensors = useWebSocket("ws://localhost:1880/ws/SenseHarvest/Sensors");
   const sensors = liveSensors ?? defaultSensors;
 
   const getStatusColor = (status: string) => {
