@@ -3,6 +3,7 @@ import { Send, Bot, User, Loader2, BrainCircuit } from "lucide-react";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -120,30 +121,26 @@ const AIChatbot = ({
         side="right"
         className="w-[400px] sm:w-[500px] flex flex-col p-0"
       >
-        <SheetHeader className="p-6 pb-2">
+        <SheetHeader className="p-6 pb-2 border-b">
           <SheetTitle className="text-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Bot className="h-5 w-5" />
-              Farm Assistant
+              {mode === 'chatbot' ? <Bot className="h-5 w-5" /> : <BrainCircuit className="h-5 w-5" />}
+              {mode === 'chatbot' ? 'Helpy' : 'Ely'}
             </div>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setMode(mode === "chatbot" ? "analysis" : "chatbot")}
             >
-              {mode === "chatbot" ? (
-                <>
-                  <Bot className="h-4 w-4 mr-2" />
-                  Chatbot Mode
-                </>
-              ) : (
-                <>
-                  <BrainCircuit className="h-4 w-4 mr-2" />
-                  Analysis Mode
-                </>
-              )}
+              Switch to {mode === "chatbot" ? "Analysis" : "Chatbot"} Mode
             </Button>
           </SheetTitle>
+          <SheetDescription>
+            {mode === 'chatbot' 
+              ? "You are talking to Helpy, your friendly farming assistant."
+              : "You are using Ely for data-driven analysis."
+            }
+          </SheetDescription>
         </SheetHeader>
 
         <ScrollArea className="flex-1 px-6">
@@ -209,7 +206,7 @@ const AIChatbot = ({
           </div>
         </ScrollArea>
 
-        <div className="px-6 py-2">
+        <div className="px-6 py-2 border-t">
           <div className="flex flex-wrap gap-2 mb-2">
             {suggestedQueries.map((query, index) => (
               <Badge
@@ -224,10 +221,10 @@ const AIChatbot = ({
           </div>
         </div>
 
-        <div className="p-6 pt-0">
+        <div className="p-6 pt-2">
           <div className="flex w-full gap-2">
             <Input
-              placeholder="Ask me anything about farming..."
+              placeholder="Ask me anything..."
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               onKeyDown={handleKeyDown}
