@@ -3,9 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { jwtDecode } from "jwt-decode";
 
 interface User {
-  _id: string;
+  _id:string;
   email: string;
   role: string;
+  exp: number;
 }
 
 interface AuthContextType {
@@ -41,6 +42,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setToken(token);
     try {
       const decoded: User = jwtDecode(token);
+
+      if (decoded.exp * 1000 < Date.now()) {
+        logout();
+        return;
+      }
+
       setUser(decoded);
       setIsAuthenticated(true);
     } catch (error) {

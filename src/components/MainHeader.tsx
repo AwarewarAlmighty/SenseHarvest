@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ModeToggle } from "./theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -185,24 +186,14 @@ const MainHeader = () => {
             <div className="flex items-center gap-4">
                 <ModeToggle />
 
-                <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
-                    {unreadCount > 0 && (
-                        <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
-                    )}
-                    </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80">
-                    <div className="p-4">
-                    <h3 className="font-medium">Notifications</h3>
-                    <p className="text-sm text-muted-foreground">
-                        You have {unreadCount} unread notifications
-                    </p>
-                    </div>
-                </DropdownMenuContent>
-                </DropdownMenu>
+                <Link to="/#notifications">
+                  <Button variant="ghost" size="icon" className="relative">
+                      <Bell className="h-5 w-5" />
+                      {unreadCount > 0 && (
+                          <span className="absolute top-0 right-0 h-2 w-2 rounded-full bg-red-500"></span>
+                      )}
+                  </Button>
+                </Link>
 
                 <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -211,7 +202,9 @@ const MainHeader = () => {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Settings</DropdownMenuItem>
+                    <Link to="/settings">
+                      <DropdownMenuItem>Settings</DropdownMenuItem>
+                    </Link>
                     <DropdownMenuItem>Help</DropdownMenuItem>
                 </DropdownMenuContent>
                 </DropdownMenu>
@@ -227,8 +220,12 @@ const MainHeader = () => {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                    <DropdownMenuItem>Profile</DropdownMenuItem>
-                    <DropdownMenuItem>Account Settings</DropdownMenuItem>
+                    <Link to="/profile">
+                      <DropdownMenuItem>Profile</DropdownMenuItem>
+                    </Link>
+                    <Link to="/settings">
+                      <DropdownMenuItem>Account Settings</DropdownMenuItem>
+                    </Link>
                     <DropdownMenuItem onClick={logout} className="text-red-500">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>

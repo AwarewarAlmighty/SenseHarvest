@@ -34,7 +34,7 @@ router.get("/", (req, res) => {
 
 router.get("/:sensorId", async (req, res) => {
   const { sensorId } = req.params;
-  const { range = "realtime" } = req.query;
+  const { range = "realtime", from, to } = req.query;
 
   const topic = topicMap[sensorId];
   const sensorName = {
@@ -49,13 +49,21 @@ router.get("/:sensorId", async (req, res) => {
   }
 
   try {
-    const db = getConnection(); 
+    const db = getConnection();
     const collection = db.collection("sensordata");
 
+    const query = { topic, "payload.name": sensorName };
+    if (from && to) {
+      query._id = {
+        $gte: ObjectId.createFromTime(new Date(from).getTime() / 1000),
+        $lte: ObjectId.createFromTime(new Date(to).getTime() / 1000),
+      };
+    }
+
     const cursor = collection
-      .find({ topic, "payload.name": sensorName })
+      .find(query)
       .sort({ _id: -1 })
-      .limit(50);
+      .limit(range === "realtime" ? 50 : 500); // Larger limit for historical data
 
     const docs = await cursor.toArray();
 

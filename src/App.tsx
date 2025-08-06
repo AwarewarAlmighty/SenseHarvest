@@ -62,11 +62,11 @@ function App() {
   }
 
   return (
-    <div className="flex">
+    <div className="flex h-screen overflow-hidden bg-background">
       {/* The sidebar is only shown for authenticated users */}
       {isAuthenticated && <Sidebar />}
 
-      <main className="flex-1">
+      <main className="flex-1 overflow-y-auto">
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />

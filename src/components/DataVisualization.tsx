@@ -16,7 +16,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { CalendarIcon, Download, RefreshCw } from "lucide-react";
-import { format, subDays, subWeeks, subMonths, startOfWeek, addDays } from "date-fns";
+import { format, subDays, startOfDay, endOfDay } from "date-fns";
 import {
   LineChart,
   Line,
@@ -27,6 +27,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { DateRange } from "react-day-picker";
 
 interface DataPoint {
   timestamp: string;
@@ -42,16 +43,46 @@ interface SensorData {
   color: string;
 }
 
-
-const generateValue = (base: number, range: number) => base + Math.random() * range;
-
 const sensorTemplates = [
-  { id: "temp1", name: "Temperature", unit: "°C", color: "#FF6384", baseValue: 20, range: 5 },
-  { id: "hum1", name: "Humidity", unit: "%", color: "#36A2EB", baseValue: 60, range: 20 },
+  { id: "temp1", name: "Temperature", unit: "°C", color: "#FF6384" },
+  { id: "hum1", name: "Humidity", unit: "%", color: "#36A2EB" },
 ];
 
-const fetchSensorData = async (sensorId: string, range: string): Promise<SensorData> => {
-  const response = await fetch(`http://localhost:3000/api/sensors/${sensorId}?range=${range}`);
+// Utility to download data as CSV
+const downloadAsCSV = (data: DataPoint[], sensorName: string) => {
+  if (!data || data.length === 0) {
+    alert("No data to export.");
+    return;
+  }
+  const headers = "timestamp,value,label\n";
+  const rows = data.map(d => `${d.timestamp},${d.value},"${d.label}"`).join("\n");
+  const csvContent = headers + rows;
+  const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  link.setAttribute("href", url);
+  link.setAttribute("download", `${sensorName}-data.csv`);
+  link.style.visibility = "hidden";
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+};
+
+
+const fetchSensorData = async (
+  sensorId: string,
+  range: string,
+  from?: Date,
+  to?: Date
+): Promise<SensorData> => {
+  let url = `http://localhost:3000/api/sensors/${sensorId}?range=${range}`;
+  if (from && to) {
+    url += `&from=${from.toISOString()}&to=${to.toISOString()}`;
+  }
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch data for sensor ${sensorId}`);
+  }
   const rawData = await response.json();
 
   const sensorTemplate = sensorTemplates.find(t => t.id === sensorId);
@@ -60,14 +91,8 @@ const fetchSensorData = async (sensorId: string, range: string): Promise<SensorD
   const formattedData: DataPoint[] = rawData.map((d: any) => ({
     timestamp: d.timestamp,
     value: d.value,
-    label: format(new Date(d.timestamp), 
-    range === "realtime"
-      ? "HH:mm:ss"              
-      : range === "daily"
-      ? "MMM d, HH:mm"           
-      : range === "weekly"
-      ? "'Week' w"               // e.g. "Week 31"
-      : "MMM"                    // e.g. "Jul"
+    label: format(new Date(d.timestamp),
+      range === "realtime" ? "HH:mm:ss" : "MMM d, HH:mm"
     ),
   }));
 
@@ -80,103 +105,86 @@ const fetchSensorData = async (sensorId: string, range: string): Promise<SensorD
   };
 };
 
-
-
 const DataVisualization = () => {
-  const [realtimeData, setRealtimeData] = useState<SensorData[]>([]);
-  const [dailyData, setDailyData] = useState<SensorData[]>([]);
-  const [weeklyData, setWeeklyData] = useState<SensorData[]>([]);
-  const [monthlyData, setMonthlyData] = useState<SensorData[]>([]);
-
+  const [data, setData] = useState<{ [key: string]: SensorData[] }>({});
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("realtime");
   const [selectedSensor, setSelectedSensor] = useState<string>("temp1");
-  const [dateRange, setDateRange] = useState<{
-    from: Date;
-    to?: Date;
-  }>({ from: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000) });
+  const [dateRange, setDateRange] = useState<DateRange | undefined>({
+    from: subDays(new Date(), 7),
+    to: new Date(),
+  });
+
+  const loadDataForTab = useCallback(async (tab: string) => {
+    if (data[tab] && data[tab].length > 0) return;
+
+    setIsLoading(true);
+    try {
+      const sensorIds = ["temp1", "hum1"];
+      const fetchedData = await Promise.all(
+        sensorIds.map(id => fetchSensorData(id, tab, dateRange?.from, dateRange?.to))
+      );
+      setData(prevData => ({ ...prevData, [tab]: fetchedData }));
+    } catch (err) {
+      console.error(`Error loading ${tab} data:`, err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [data, dateRange]);
 
   useEffect(() => {
-  const loadData = async () => {
-    const sensorIds = ["temp1", "hum1"];
-    const data = await Promise.all(sensorIds.map(id => fetchSensorData(id, "realtime")));
-    setRealtimeData(data);
-  };
-
-  loadData();
-}, []);
-
+    loadDataForTab(activeTab);
+  }, [activeTab, loadDataForTab]);
 
   const handleRefresh = useCallback(async () => {
-  setIsLoading(true);
-
-  try {
-    const sensorIds = ["temp1", "hum1" ];
-
-    const [
-      realtime,
-      daily,
-      weekly,
-      monthly
-    ] = await Promise.all([
-      Promise.all(sensorIds.map(id => fetchSensorData(id, "realtime"))),
-      Promise.all(sensorIds.map(id => fetchSensorData(id, "daily"))),
-      Promise.all(sensorIds.map(id => fetchSensorData(id, "weekly"))),
-      Promise.all(sensorIds.map(id => fetchSensorData(id, "monthly")))
-    ]);
-
-    setRealtimeData(realtime);
-    setDailyData(daily);
-    setWeeklyData(weekly);
-    setMonthlyData(monthly);
-  } catch (err) {
-    console.error("Error refreshing sensor data:", err);
-  }
-
-  setIsLoading(false);
-}, []);
-
+    setIsLoading(true);
+    try {
+      const sensorIds = ["temp1", "hum1"];
+      const fetchedData = await Promise.all(
+        sensorIds.map(id => fetchSensorData(id, activeTab, dateRange?.from, dateRange?.to))
+      );
+      setData(prevData => ({ ...prevData, [activeTab]: fetchedData }));
+    } catch (err) {
+      console.error("Error refreshing sensor data:", err);
+    }
+    setIsLoading(false);
+  }, [activeTab, dateRange]);
+  
+  const currentSensorData = (data[activeTab] || []).find(s => s.id === selectedSensor);
 
   const handleExport = () => {
-    console.log("Exporting data...");
+      if (currentSensorData) {
+          downloadAsCSV(currentSensorData.data, currentSensorData.name);
+      }
   };
 
-  const getDataForTab = (tab: string) => {
-    switch (tab) {
-      case 'daily':
-        return dailyData;
-      case 'weekly':
-        return weeklyData;
-      case 'monthly':
-        return monthlyData;
-      default:
-        return realtimeData;
-    }
-  };
 
-  const currentData = getDataForTab(activeTab);
-  const currentSensorData =
-    currentData.find((sensor) => sensor.id === selectedSensor) || (currentData.length > 0 ? currentData[0] : null);
-
-  const renderChart = (data: SensorData | null) => {
-    if (!data) {
+  const renderChart = (sensorData: SensorData | undefined) => {
+    if (isLoading) {
       return (
         <div className="w-full h-64 bg-muted/20 rounded-md flex items-center justify-center">
-          Loading data...
+          <p>Loading data...</p>
+        </div>
+      );
+    }
+    if (!sensorData || sensorData.data.length === 0) {
+      return (
+        <div className="w-full h-64 bg-muted/20 rounded-md flex items-center justify-center">
+          <p>No data available for the selected period.</p>
         </div>
       );
     }
     return (
       <div>
         <h3 className="text-lg font-medium text-center mb-4">
-          {data.name} ({data.unit})
+          {sensorData.name} ({sensorData.unit})
         </h3>
         <ResponsiveContainer width="100%" height={300}>
-          <LineChart data={data.data}>
+          <LineChart data={sensorData.data}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="label"
-              interval={0}
+              interval="preserveStartEnd"
               angle={-45}
               textAnchor="end"
               height={70}
@@ -188,7 +196,7 @@ const DataVisualization = () => {
             <Line
               type="monotone"
               dataKey="value"
-              stroke={data.color}
+              stroke={sensorData.color}
               activeDot={{ r: 8 }}
             />
           </LineChart>
@@ -226,22 +234,15 @@ const DataVisualization = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-4">
           <div className="flex flex-col sm:flex-row justify-between gap-4 ">
             <div className="w-full sm:w-auto">
-              <Tabs
-                defaultValue="realtime"
-                value={activeTab}
-                onValueChange={setActiveTab}
-                className="w-full"
-              >
                 <TabsList>
                   <TabsTrigger value="realtime">Real-time</TabsTrigger>
                   <TabsTrigger value="daily">Daily</TabsTrigger>
                   <TabsTrigger value="weekly">Weekly</TabsTrigger>
                   <TabsTrigger value="monthly">Monthly</TabsTrigger>
                 </TabsList>
-              </Tabs>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-2 ">
@@ -250,7 +251,7 @@ const DataVisualization = () => {
                   <SelectValue placeholder="Select sensor" />
                 </SelectTrigger>
                 <SelectContent>
-                  {(currentData || []).map((sensor) => (
+                  {sensorTemplates.map((sensor) => (
                     <SelectItem key={sensor.id} value={sensor.id}>
                       {sensor.name}
                     </SelectItem>
@@ -284,7 +285,7 @@ const DataVisualization = () => {
                     <Calendar
                       mode="range"
                       selected={dateRange}
-                      onSelect={setDateRange as any}
+                      onSelect={setDateRange}
                       initialFocus
                     />
                   </PopoverContent>
@@ -293,21 +294,17 @@ const DataVisualization = () => {
             </div>
           </div>
 
-          <Tabs
-            value={activeTab}
-            className="w-full"
-          >
             <TabsContent value="realtime" className="mt-0 border-0 p-0">
-              {renderChart(currentSensorData)}
+                {renderChart(currentSensorData)}
             </TabsContent>
             <TabsContent value="daily" className="mt-0 border-0 p-0">
-              {renderChart(currentSensorData)}
+                {renderChart(currentSensorData)}
             </TabsContent>
             <TabsContent value="weekly" className="mt-0 border-0 p-0">
-              {renderChart(currentSensorData)}
+                {renderChart(currentSensorData)}
             </TabsContent>
             <TabsContent value="monthly" className="mt-0 border-0 p-0">
-              {renderChart(currentSensorData)}
+                {renderChart(currentSensorData)}
             </TabsContent>
           </Tabs>
 
@@ -315,7 +312,6 @@ const DataVisualization = () => {
             <span>Last updated: {new Date().toLocaleString()}</span>
             <span>Source: Farm Sensors Network</span>
           </div>
-        </div>
       </CardContent>
     </Card>
   );

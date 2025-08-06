@@ -254,7 +254,7 @@ const Dashboard = () => {
                 </div>
             </div>
 
-            <div className="lg:col-span-1 flex flex-col gap-6 dashboard-card">
+            <div className="lg:col-span-1 flex flex-col gap-6 dashboard-card" id="notifications">
                 <InventoryInfoCard />
                 <NotificationCenter />
             </div>

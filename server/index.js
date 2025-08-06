@@ -90,7 +90,7 @@ async function startServer() {
         }
         const payload = { id: user._id, email: user.email, role: user.role };
         const token = jwt.sign(payload, process.env.JWT_SECRET, {
-          expiresIn: "1d",
+          expiresIn: "2h",
         });
         return res.json({ token });
       });

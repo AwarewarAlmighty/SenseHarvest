@@ -71,7 +71,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className="hidden md:flex md:flex-col h-screen bg-background border-r transition-all duration-500 ease-in-out relative"
+      className="hidden md:flex md:flex-col h-screen flex-shrink-0 bg-background border-r transition-all duration-500 ease-in-out relative"
       style={{ width: isOpen ? '200px' : '60px' }}
     >
       <div className="flex items-center justify-center h-16 px-2 border-b">
