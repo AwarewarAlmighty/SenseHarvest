@@ -1,14 +1,18 @@
-import React, { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
+import React, { useEffect, useRef } from "react";
+import { gsap } from "gsap"; // Import GSAP
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+} from "@/components/ui/card";
 import { useAuth } from "../context/AuthContext";
 import { ModeToggle } from "./theme-toggle";
-import SensorStatusGrid from "./SensorStatusGrid";
 import DataVisualization from "./DataVisualization";
 import NotificationCenter from "./NotificationCenter";
-import AIChatbot from "./AIChatbot";
-import { GoogleGenerativeAI, SystemInstruction } from "@google/generative-ai";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Settings, LogOut, Menu } from "lucide-react";
+import { Bell, Settings, LogOut, Menu, ArrowRight, Thermometer, Droplets, Wind, Mountain } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -16,129 +20,158 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Link } from "react-router-dom";
+import useWebSocket from "../hooks/useWebSocket";
+import { Badge } from "@/components/ui/badge";
 
-const initialNotifications = [
-  {
-    id: "1",
-    title: "Temperature Alert",
-    description: "Greenhouse temperature exceeds threshold (32°C)",
-    timestamp: "10 minutes ago",
-    severity: "critical",
-    read: false,
-    action: "Activate cooling system",
-  },
-  {
-    id: "2",
-    title: "Humidity Warning",
-    description: "Humidity levels below optimal range (30%)",
-    timestamp: "1 hour ago",
-    severity: "warning",
-    read: false,
-    action: "Check irrigation system",
-  },
-  {
-    id: "3",
-    title: "Soil Moisture Update",
-    description: "Soil moisture levels have returned to normal",
-    timestamp: "3 hours ago",
-    severity: "info",
-    read: true,
-  },
-  {
-    id: "4",
-    title: "Gas Level Alert",
-    description: "CO2 levels above normal in storage area",
-    timestamp: "5 hours ago",
-    severity: "warning",
-    read: false,
-    action: "Increase ventilation",
-  },
-  {
-    id: "5",
-    title: "System Update",
-    description: "Sensor firmware updated successfully",
-    timestamp: "1 day ago",
-    severity: "info",
-    read: true,
-  },
-];
+// --- Card Components (no changes here) ---
 
-const Dashboard = () => {
-  const { user, logout } = useAuth();
-  const [notifications, setNotifications] = useState(initialNotifications);
+const InventoryOverviewCard = () => (
+  <Card className="flex flex-col h-full">
+    <CardHeader>
+      <CardTitle className="text-lg">Inventory Overview</CardTitle>
+      <CardDescription>A snapshot of your current inventory.</CardDescription>
+    </CardHeader>
+    <CardContent className="flex-grow flex flex-col justify-between">
+      <div>
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-muted-foreground">Fertilizers</span>
+          <span className="font-semibold">5 types</span>
+        </div>
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-muted-foreground">Seeds</span>
+          <span className="font-semibold">12 varieties</span>
+        </div>
+        <div className="flex justify-between items-center">
+          <span className="text-muted-foreground">Equipment</span>
+          <span className="font-semibold">8 units</span>
+        </div>
+      </div>
+      <Button variant="outline" className="mt-4 w-full" asChild>
+        <Link to="/inventory">
+          View Full Inventory <ArrowRight className="ml-2 h-4 w-4" />
+        </Link>
+      </Button>
+    </CardContent>
+  </Card>
+);
 
-  const unreadCount = notifications.filter((n) => !n.read).length;
+const EmployeeLogCard = () => (
+    <Card className="flex flex-col h-full">
+        <CardHeader>
+            <CardTitle className="text-lg">Employee Log</CardTitle>
+            <CardDescription>Recent warehouse access.</CardDescription>
+        </CardHeader>
+        <CardContent className="flex-grow flex flex-col justify-between">
+            <div>
+                <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=employee1" />
+                            <AvatarFallback>E1</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-sm">John Doe</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">9:41 AM</span>
+                </div>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <Avatar className="h-8 w-8">
+                            <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=employee2" />
+                            <AvatarFallback>E2</AvatarFallback>
+                        </Avatar>
+                        <span className="font-medium text-sm">Jane Smith</span>
+                    </div>
+                    <span className="text-xs text-muted-foreground">9:38 AM</span>
+                </div>
+            </div>
+            <Button variant="outline" className="mt-4 w-full" asChild>
+                <Link to="/EmployeesLogs">
+                    View All Logs <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+            </Button>
+        </CardContent>
+    </Card>
+);
 
-  const handleClearAll = () => {
-    setNotifications([]);
-  };
+const InventoryInfoCard = () => {
+  const liveSensors = useWebSocket("ws://52.65.165.101:1880/ws/SenseHarvest");
+    const sensors = liveSensors ?? [
+        { name: 'Temperature', value: 24.5, unit: '°C', status: 'normal' },
+        { name: 'Humidity', value: 68, unit: '%', status: 'warning' },
+        { name: 'Soil Moisture', value: 42, unit: '%', status: 'normal' },
+        { name: 'CO2 Level', value: 1250, unit: 'ppm', status: 'critical' },
+  ];
 
-  const handleMarkAsRead = (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read: true } : n))
-    );
-  };
-
-  const handleTakeAction = (id: string, action: string) => {
-    console.log(`Action taken for notification ${id}: ${action}`);
-  };
-
-  const geminiApiKey = import.meta.env.VITE_GEMINI_API_KEY;
-  const genAI = new GoogleGenerativeAI(geminiApiKey);
-
-  const handleSendMessage = async (
-    message: string,
-    mode: "chatbot" | "analysis"
-  ): Promise<string> => {
-    let systemInstruction: SystemInstruction;
-
-    if (mode === "chatbot") {
-      systemInstruction = {
-        role: "system",
-        parts: [{ text: "You are Helpy, a friendly and helpful farming assistant. Keep your responses simple and to the point." }],
-      };
-    } else {
-      systemInstruction = {
-        role: "system",
-        parts: [{
-          text: `
-          Ely
-          1. Core Identity
-          You are Ely, the AI assistant for the SenseHarvest platform. Your fundamental purpose is to act as a reliable partner to farmers, helping them protect their harvest and improve their practices by making complex information simple and actionable.
-
-          2. Your Persona
-          Personality Traits: You are patient, encouraging, knowledgeable, and data-driven. You are a teacher at heart.
-
-          3. Guiding Principles
-          Empower the Farmer, Data-Driven, Human-Centric, and Proactive Helpfulness.
-
-          4. Core Capabilities
-          A. Agricultural Knowledge Chat: Answer questions about agriculture, post-harvest management, crop health, etc. If asked a non-agricultural question, politely decline and steer the conversation back.
-          B. Sensor Data Analysis: When you see input starting with [DATA] or the /summarize command, provide a summary in the specified format, then ask to export as a PDF.
-        ` }]
-      };
+  const getStatusColorClass = (status: string) => {
+    switch (status) {
+      case "normal": return "text-green-500";
+      case "warning": return "text-yellow-500";
+      case "critical": return "text-red-500";
+      default: return "text-muted-foreground";
     }
+  };
 
-    try {
-      const model = genAI.getGenerativeModel({
-        model: "gemini-1.5-flash",
-        systemInstruction,
-      });
-
-      const result = await model.generateContent(message);
-      return result.response.text();
-    } catch (error) {
-      console.error("Error calling Gemini API:", error);
-      return mode === 'chatbot'
-        ? "Sorry, I'm having trouble connecting with Helpy right now."
-        : "Sorry, I encountered an error while analyzing your request with Ely.";
-    }
+  const sensorIcons: { [key: string]: React.ReactNode } = {
+    'Temperature': <Thermometer className="h-5 w-5" />,
+    'Humidity': <Droplets className="h-5 w-5" />,
+    'Soil Moisture': <Mountain className="h-5 w-5" />,
+    'CO2 Level': <Wind className="h-5 w-5" />,
   };
 
   return (
+    <Card className="h-full">
+      <CardHeader>
+        <CardTitle className="text-lg">Inventory Info</CardTitle>
+        <CardDescription>Real-time environmental conditions.</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-4">
+          {sensors.slice(0, 4).map((sensor: any) => (
+            <div key={sensor.name} className="flex items-center justify-between">
+              <div className="flex items-center gap-3 text-sm">
+                 <div className="text-muted-foreground">{sensorIcons[sensor.name] || <Thermometer className="h-5 w-5" />}</div>
+                <span className="font-medium">{sensor.name}</span>
+              </div>
+              <Badge variant={sensor.status === 'critical' ? 'destructive' : 'secondary'} className={getStatusColorClass(sensor.status)}>
+                {sensor.value}{sensor.unit}
+              </Badge>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+
+const Dashboard = () => {
+  const { user, logout } = useAuth();
+  const unreadCount = 3; // Mock data
+
+  // Ref for the main container of the cards to animate
+  const dashboardRef = useRef(null);
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+        // Target all direct children of the grid columns to animate them
+        gsap.from(".dashboard-card > *", { 
+            y: 20,
+            opacity: 0,
+            duration: 0.5,
+            ease: "power3.out",
+            stagger: 0.3,
+        });
+    }, dashboardRef);
+
+    // Cleanup function to revert animations
+    return () => ctx.revert();
+  }, []);
+
+
+  return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+       <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container flex h-16 items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" className="md:hidden">
@@ -146,7 +179,7 @@ const Dashboard = () => {
             </Button>
             <div className="flex items-center gap-2">
               <img
-                src="https://images.unsplash.com/photo-1579546929518-9e396f3cc809?w=50&q=80"
+                src="https://cdn-icons-png.freepik.com/512/17566/17566683.png"
                 alt="SenseHarvest Logo"
                 className="h-8 w-8 rounded-md"
               />
@@ -211,44 +244,38 @@ const Dashboard = () => {
         </div>
       </header>
 
+
       {/* Main Content */}
       <main className="container py-6">
-        <div className="mb-6">
+         <div className="mb-6">
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-muted-foreground">
-            Monitor your farm's environmental conditions in real-time.
+            A high-level overview of your farm's operations.
           </p>
         </div>
 
-        <div className="mb-8">
-          <SensorStatusGrid />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2">
-            <DataVisualization />
-          </div>
-          <div className="space-y-6">
-            <Card>
-              <CardContent className="p-6">
-                <h3 className="text-lg font-medium mb-4">Notifications</h3>
-                <NotificationCenter
-                  notifications={notifications}
-                  onClearAll={handleClearAll}
-                  onMarkAsRead={handleMarkAsRead}
-                  onTakeAction={handleTakeAction}
-                />
-              </CardContent>
-            </Card>
-            <div className="flex justify-center">
-              <AIChatbot onSendMessage={handleSendMessage} />
+        <div 
+          ref={dashboardRef}
+          className="grid grid-cols-1 lg:grid-cols-3 gap-6"
+        >
+            {/* Column 1 */}
+            <div className="lg:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-6 dashboard-card">
+                <InventoryOverviewCard />
+                <EmployeeLogCard />
+                <div className="sm:col-span-2">
+                     <DataVisualization />
+                </div>
             </div>
-          </div>
+
+            {/* Column 2 */}
+            <div className="lg:col-span-1 flex flex-col gap-6 dashboard-card">
+                <InventoryInfoCard />
+                <NotificationCenter />
+            </div>
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t py-6">
+      <footer className="border-t py-6 mt-8">
         <div className="container flex flex-col items-center justify-between gap-4 md:h-16 md:flex-row">
           <p className="text-center text-sm text-muted-foreground md:text-left">
             &copy; {new Date().getFullYear()} SenseHarvest. All rights reserved.
