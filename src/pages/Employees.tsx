@@ -58,7 +58,7 @@ const Employees = () => {
 
     const fetchLogs = async () => {
       try {
-        const response = await fetch(`${apiUrl}/api/employees/logs`, {
+        const response = await fetch(`${apiUrl}/api/logs`, { // CORRECTED: The endpoint is /api/logs
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -73,7 +73,8 @@ const Employees = () => {
             setLogs([]);
         }
       } catch (err: any) {
-        setError(err.message);
+        console.error("Failed to load logs for employee status", err);
+        // We don't set a visible error here, as status may just appear "unknown"
       }
     };
 
@@ -95,7 +96,8 @@ const Employees = () => {
         body: JSON.stringify({ uid, name, role }),
       });
       if (!response.ok) {
-        throw new Error('Failed to add employee');
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to add employee');
       }
       const newEmployee = await response.json();
       setEmployees([...employees, newEmployee]);
@@ -190,47 +192,50 @@ const Employees = () => {
                 <CardTitle>Employee List</CardTitle>
                 </CardHeader>
                 <CardContent>
-                <table className="w-full">
-                    <thead>
-                    <tr>
-                        <th className="text-left text-foreground">UID</th>
-                        <th className="text-left text-foreground">Name</th>
-                        <th className="text-left text-foreground">Role</th>
-                        <th className="text-left text-foreground">Status</th>
-                        <th></th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    {employees.map((emp) => {
-                        const { status } = getEmployeeStatus(emp.uid);
-                        return (
-                        <tr key={emp._id}>
-                            <td className="text-foreground">{emp.uid}</td>
-                            <td className="text-foreground">{emp.name}</td>
-                            <td className="text-foreground">{emp.role}</td>
-                            <td className="text-foreground">
-                            <div className="flex items-center">
-                                <span
-                                className={`h-2 w-2 rounded-full mr-2 ${
-                                    status === 'accepted' ? 'bg-green-500' : 'bg-red-500'
-                                }`}
-                                ></span>
-                                {status}
-                            </div>
-                            </td>
-                            <td>
-                            <Button
-                                variant="destructive"
-                                onClick={() => handleDeleteEmployee(emp._id)}
-                            >
-                                Delete
-                            </Button>
-                            </td>
-                        </tr>
-                        );
-                    })}
-                    </tbody>
-                </table>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                      <thead>
+                      <tr>
+                          <th className="text-left text-foreground p-2">UID</th>
+                          <th className="text-left text-foreground p-2">Name</th>
+                          <th className="text-left text-foreground p-2">Role</th>
+                          <th className="text-left text-foreground p-2">Status</th>
+                          <th className="text-right p-2"></th>
+                      </tr>
+                      </thead>
+                      <tbody>
+                      {employees.map((emp) => {
+                          const { status } = getEmployeeStatus(emp.uid);
+                          return (
+                          <tr key={emp._id}>
+                              <td className="text-foreground p-2">{emp.uid}</td>
+                              <td className="text-foreground p-2">{emp.name}</td>
+                              <td className="text-foreground p-2">{emp.role}</td>
+                              <td className="text-foreground p-2">
+                              <div className="flex items-center">
+                                  <span
+                                  className={`h-2.5 w-2.5 rounded-full mr-2 ${
+                                      status === 'accepted' ? 'bg-green-500' : status === 'unknown' ? 'bg-gray-400' : 'bg-red-500'
+                                  }`}
+                                  ></span>
+                                  {status}
+                              </div>
+                              </td>
+                              <td className="text-right p-2">
+                              <Button
+                                  variant="destructive"
+                                  size="sm"
+                                  onClick={() => handleDeleteEmployee(emp._id)}
+                              >
+                                  Delete
+                              </Button>
+                              </td>
+                          </tr>
+                          );
+                      })}
+                      </tbody>
+                  </table>
+                </div>
                 </CardContent>
             </Card>
         </main>

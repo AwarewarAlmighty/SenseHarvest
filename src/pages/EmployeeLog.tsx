@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import MainHeader from "../components/MainHeader";
 
-// Define the API URL at the top
-const apiUrl = import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3000');
+const apiUrl = import.meta.env.VITE_API_URL || '';
 
 type Log = {
   uid: string;
@@ -21,18 +20,28 @@ const EmployeeLog = () => {
   const [logs, setLogs] = useState<Log[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     axios
-      .get(`${apiUrl}/employees/logs`) // Use apiUrl here
+      .get(`${apiUrl}/api/logs`) // CORRECTED: The endpoint is /api/logs
       .then((res) => {
           if(Array.isArray(res.data)) {
-            setLogs(res.data)
+            // Sort logs by timestamp in descending order
+            const sortedLogs = res.data.sort((a, b) => 
+                new Date(b.payload.timestamp).getTime() - new Date(a.payload.timestamp).getTime()
+            );
+            setLogs(sortedLogs);
           } else {
-            setLogs([])
+            setLogs([]);
+            setError("Received invalid data from server.");
           }
         })
-      .catch((err) => console.error("Failed to load logs", err));
+      .catch((err) => {
+          console.error("Failed to load logs", err);
+          setError("Failed to load logs. Please try again later.");
+      });
   }, []);
 
   const filteredLogs = logs.filter((log) => {
@@ -73,6 +82,7 @@ const EmployeeLog = () => {
           className="w-full max-w-md px-4 py-2 border border-[#759b8c] rounded-lg shadow-sm bg-white dark:bg-[#1e1e1e] dark:text-white dark:border-[#759b8c] focus:outline-none focus:ring-2 focus:ring-[#759b8c] transition"
         />
       </div>
+      {error && <p className="text-red-500 mb-4">{error}</p>}
 
       {/* Table */}
       <div className="overflow-x-auto rounded-xl shadow-md bg-white dark:bg-[#1a1a1a]">

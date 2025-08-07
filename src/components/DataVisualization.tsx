@@ -151,7 +151,7 @@ const DataVisualization = () => {
     }
     setIsLoading(false);
   }, [activeTab, dateRange]);
-
+  
   const currentSensorData = (data[activeTab] || []).find(s => s.id === selectedSensor);
 
   const handleExport = () => {
