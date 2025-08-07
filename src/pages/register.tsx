@@ -11,6 +11,9 @@ import { Input } from "../components/ui/input";
 import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 
+// Use an empty string as fallback for development to leverage Vite's proxy
+const apiUrl = import.meta.env.VITE_API_URL || '';
+
 function Register() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -25,7 +28,8 @@ function Register() {
     setSuccess("");
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      // This will now correctly resolve to /api/auth/register in dev
+      // and https://<your-backend>/api/auth/register in production
       const response = await fetch(`${apiUrl}/api/auth/register`, {
         method: "POST",
         headers: {
@@ -37,10 +41,10 @@ function Register() {
       const data = await response.json();
 
       if (response.ok) {
-        setSuccess("Registration successful! Redirecting to login...");
+        setSuccess("Registration successful! Your account is pending approval. Redirecting to login...");
         setTimeout(() => {
           navigate("/login");
-        }, 2000);
+        }, 3000);
       } else {
         setError(data.message || "Registration failed. Please try again.");
       }

@@ -12,6 +12,9 @@ import { Button } from "../components/ui/button";
 import { Label } from "../components/ui/label";
 import { Link, useNavigate } from "react-router-dom";
 
+// Use an empty string as fallback for development to leverage Vite's proxy
+const apiUrl = import.meta.env.VITE_API_URL || '';
+
 function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +27,8 @@ function Login() {
     setError("");
 
     try {
-      const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+      // This will now correctly resolve to /api/auth/login in dev
+      // and https://<your-backend>/api/auth/login in production
       const response = await fetch(`${apiUrl}/api/auth/login`, {
         method: "POST",
         headers: {
