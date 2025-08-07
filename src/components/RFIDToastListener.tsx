@@ -7,7 +7,7 @@ import axios from "axios";
 const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 // CORRECT: WebSocket URL for real-time connection
-const websocketUrl = import.meta.env.VITE_WS_URL || "ws://localhost:1880/ws/SenseHarvest/RFID";
+const websocketUrl = import.meta.env.VITE_WS_URL || "wss://senseharvest.ddns.net/ws/SenseHarvest/RFID";
 
 
 const RFIDToastListener: React.FC = () => {
