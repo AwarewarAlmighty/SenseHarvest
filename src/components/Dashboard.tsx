@@ -169,9 +169,9 @@ const EmployeeLogCard = () => {
 
 
 const InventoryInfoCard = () => {
-  const websocketUrl = import.meta.env.VITE_WS_URL || "wss://senseharvest.ddns.net/ws/SenseHarvest/Sensors";
+  const websocketUrl = import.meta.env.VITE_WS_URL || "wss://senseharvest.ddns.net/ws/SenseHarvest";
   console.log(`This is url ${websocketUrl}`)
-  const liveSensors = useWebSocket(websocketUrl);
+  const liveSensors = useWebSocket(`${websocketUrl}/Sensors`);
     const sensors = Array.isArray(liveSensors) ? liveSensors : [
         { name: 'Temperature', value: 24.5, unit: '°C', status: 'normal' },
         { name: 'Humidity', value: 68, unit: '%', status: 'warning' },
