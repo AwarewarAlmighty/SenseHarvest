@@ -11,7 +11,7 @@ interface InventoryItem {
 }
 
 const ITEMS_PER_PAGE = 10;
-const apiUrl = import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3000');
+const apiUrl = import.meta.env.VITE_API_URL || '';
 
 export default function Inventory() {
   const { user, logout } = useAuth();
@@ -32,7 +32,7 @@ export default function Inventory() {
   useEffect(() => {
     const fetchInventoryItems = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/inventory`);
+        const response = await axios.get(`${apiUrl}/api/inventory`);
         if (Array.isArray(response.data)) {
             setInventoryItems(response.data);
         } else {
@@ -71,7 +71,7 @@ export default function Inventory() {
         amount: newItemAmount,
       };
       try {
-        const response = await axios.post(`${apiUrl}/inventory`, newItem);
+        const response = await axios.post(`${apiUrl}/api/inventory`, newItem);
         setInventoryItems([...inventoryItems, response.data]);
         setNewItemName("");
         setNewItemPlace("");
@@ -94,7 +94,7 @@ export default function Inventory() {
     e.preventDefault();
     if (editingItem && editedPlace && editedAmount) {
       try {
-        const response = await axios.put(`${apiUrl}/inventory/${editingItem._id}`, { place: editedPlace, amount: editedAmount });
+        const response = await axios.put(`${apiUrl}/api/inventory/${editingItem._id}`, { place: editedPlace, amount: editedAmount });
         setInventoryItems(
           inventoryItems.map((item) =>
             item._id === editingItem._id ? response.data : item
@@ -111,7 +111,7 @@ export default function Inventory() {
   const handleDeleteClick = async (id: string) => {
     if (window.confirm("Are you sure you want to delete this item?")) {
       try {
-        await axios.delete(`${apiUrl}/inventory/${id}`);
+        await axios.delete(`${apiUrl}/api/inventory/${id}`);
         setInventoryItems(inventoryItems.filter((item) => item._id !== id));
       } catch (err: any) {
         setError(err.message);
@@ -120,7 +120,6 @@ export default function Inventory() {
   };
 
   return (
-    // JSX remains the same
     <div className="min-h-screen bg-background">
       <MainHeader />
       <main className="container py-6">

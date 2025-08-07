@@ -6,8 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import MainHeader from '../components/MainHeader';
 
-// Define the API URL at the top
-const apiUrl = import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3000');
+const apiUrl = import.meta.env.VITE_API_URL || '';
 
 interface Employee {
   _id: string;
@@ -38,7 +37,7 @@ const Employees = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await fetch(`${apiUrl}/employees`, { //  Use apiUrl
+        const response = await fetch(`${apiUrl}/api/employees`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -59,7 +58,7 @@ const Employees = () => {
 
     const fetchLogs = async () => {
       try {
-        const response = await fetch(`${apiUrl}/employees/logs`, { //  Use apiUrl
+        const response = await fetch(`${apiUrl}/api/employees/logs`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -87,7 +86,7 @@ const Employees = () => {
   const handleAddEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${apiUrl}/employees`, { //  Use apiUrl
+      const response = await fetch(`${apiUrl}/api/employees`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -111,7 +110,7 @@ const Employees = () => {
   const handleDeleteEmployee = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        const response = await fetch(`${apiUrl}/employees/${id}`, { //  Use apiUrl
+        const response = await fetch(`${apiUrl}/api/employees/${id}`, {
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${token}`,

@@ -29,7 +29,7 @@ import {
 } from "recharts";
 import { DateRange } from "react-day-picker";
 
-const apiUrl = import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3000');
+const apiUrl = import.meta.env.VITE_API_URL || '';
 
 interface DataPoint {
   timestamp: string;
@@ -77,7 +77,7 @@ const fetchSensorData = async (
   from?: Date,
   to?: Date
 ): Promise<SensorData> => {
-    let url = `${apiUrl}/sensors/${sensorId}?range=${range}`;
+    let url = `${apiUrl}/api/sensors/${sensorId}?range=${range}`;
     if (from && to) {
         url += `&from=${from.toISOString()}&to=${to.toISOString()}`;
     }
@@ -151,7 +151,7 @@ const DataVisualization = () => {
     }
     setIsLoading(false);
   }, [activeTab, dateRange]);
-  
+
   const currentSensorData = (data[activeTab] || []).find(s => s.id === selectedSensor);
 
   const handleExport = () => {
