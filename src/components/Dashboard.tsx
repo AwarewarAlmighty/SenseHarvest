@@ -10,13 +10,16 @@ import {
 import DataVisualization from "./DataVisualization";
 import NotificationCenter from "./NotificationCenter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowRight, Thermometer, Droplets, Wind, Mountain, Sun, Cloud, Zap } from "lucide-react";
+import { ArrowRight, Thermometer, Droplets, Wind } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import useWebSocket from "../hooks/useWebSocket";
 import { Badge } from "@/components/ui/badge";
 import MainHeader from "./MainHeader";
 import axios from 'axios';
+
+// --- Define API URL for all HTTP requests ---
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // --- Card Components ---
 
@@ -34,7 +37,8 @@ const InventoryOverviewCard = () => {
     useEffect(() => {
         const fetchInventoryStats = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/api/inventory');
+                // CORRECT: Use the apiUrl variable
+                const response = await axios.get(`${apiUrl}/api/inventory`);
                 const items: InventoryItem[] = response.data;
 
                 if (items.length > 0) {
@@ -47,7 +51,7 @@ const InventoryOverviewCard = () => {
                         locations: uniqueLocations,
                     });
                 } else {
-                     setStats({ uniqueItems: 0, totalQuantity: 0, locations: 0 });
+                    setStats({ uniqueItems: 0, totalQuantity: 0, locations: 0 });
                 }
             } catch (err) {
                 setError('Failed to fetch inventory stats.');
@@ -113,7 +117,8 @@ const EmployeeLogCard = () => {
     useEffect(() => {
         const fetchLogs = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/api/employees/logs');
+                // CORRECT: Use the apiUrl variable
+                const response = await axios.get(`${apiUrl}/api/employees/logs`);
                 const sortedLogs = response.data.sort((a: Log, b: Log) => new Date(b.payload.timestamp).getTime() - new Date(a.payload.timestamp).getTime());
                 setLogs(sortedLogs.slice(0, 2));
             } catch (err) {
@@ -165,7 +170,9 @@ const EmployeeLogCard = () => {
 
 
 const InventoryInfoCard = () => {
-  const liveSensors = useWebSocket("wss://senseharvest.ddns.net/ws/SenseHarvest/Sensors");
+  // CORRECT: Use environment variable for WebSocket URL
+  const websocketUrl = import.meta.env.VITE_WS_URL || "ws://localhost:1880/ws/SenseHarvest/Sensors";
+  const liveSensors = useWebSocket(websocketUrl);
     const sensors = liveSensors ?? [
         { name: 'Temperature', value: 24.5, unit: '°C', status: 'normal' },
         { name: 'Humidity', value: 68, unit: '%', status: 'warning' },
@@ -235,7 +242,7 @@ const Dashboard = () => {
     <div className="min-h-screen bg-background">
        <MainHeader />
       <main className="container py-6">
-         <div className="mb-6">
+        <div className="mb-6">
           <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
           <p className="text-muted-foreground">
             A high-level overview of your farm's operations.
