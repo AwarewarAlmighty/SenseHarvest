@@ -169,7 +169,7 @@ const EmployeeLogCard = () => {
 
 
 const InventoryInfoCard = () => {
-  const websocketUrl = import.meta.env.VITE_WS_URL || "ws://localhost:1880/ws/SenseHarvest/Sensors";
+  const websocketUrl = import.meta.env.VITE_WS_URL || "wss://senseharvest.ddns.net/ws/SenseHarvest/Sensors";
   const liveSensors = useWebSocket(websocketUrl);
     const sensors = liveSensors ?? [
         { name: 'Temperature', value: 24.5, unit: '°C', status: 'normal' },
