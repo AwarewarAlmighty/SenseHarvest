@@ -29,6 +29,8 @@ import {
 } from "recharts";
 import { DateRange } from "react-day-picker";
 
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 interface DataPoint {
   timestamp: string;
   value: number;
@@ -75,7 +77,7 @@ const fetchSensorData = async (
   from?: Date,
   to?: Date
 ): Promise<SensorData> => {
-  let url = `http://localhost:3000/api/sensors/${sensorId}?range=${range}`;
+  let url = `http://{apiUrl}/api/sensors/${sensorId}?range=${range}`;
   if (from && to) {
     url += `&from=${from.toISOString()}&to=${to.toISOString()}`;
   }
