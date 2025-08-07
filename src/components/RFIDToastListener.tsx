@@ -3,6 +3,8 @@ import { toast } from "react-toastify";
 import Modal from "react-modal";
 import axios from "axios";
 
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
 const RFIDToastListener: React.FC = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -37,7 +39,7 @@ const RFIDToastListener: React.FC = () => {
 
   const handleRegister = async () => {
     try {
-      await axios.post("http://localhost:3000/api/employees", {
+      await axios.post(`${apiUrl}/api/employees`, {
         uid: registerUID,
         name,
         department: department || "Default", 

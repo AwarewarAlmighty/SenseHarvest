@@ -1,122 +1,94 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { toast } from 'react-toastify';
+
+const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+
+interface Settings {
+  temperature: { min: number; max: number };
+  humidity: { min: number; max: number };
+}
 
 const SensorSettings = () => {
   const { token } = useAuth();
-  const [thresholds, setThresholds] = useState({
-    temperature: '',
-    humidity: '',
-    moisture: '',
-    co2: '',
+  const [settings, setSettings] = useState<Settings>({
+    temperature: { min: 0, max: 100 },
+    humidity: { min: 0, max: 100 },
   });
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
+      if (!token) return;
       try {
-        const response = await fetch('/api/sensors/settings', {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+        const response = await fetch(`${apiUrl}/api/sensors/settings`, {
+          headers: { 'Authorization': `Bearer ${token}` }
         });
-        if (!response.ok) {
-          throw new Error('Failed to fetch settings');
-        }
+        if (!response.ok) throw new Error('Could not fetch settings');
         const data = await response.json();
-        setThresholds(data);
+        setSettings(data);
       } catch (err: any) {
         setError(err.message);
+      } finally {
+        setLoading(false);
       }
     };
-
-    if (token) {
-      fetchSettings();
-    }
+    fetchSettings();
   }, [token]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setThresholds((prev) => ({ ...prev, [name]: value }));
+    const [category, type] = name.split('.');
+    setSettings(prev => ({
+      ...prev,
+      [category]: { ...prev[category as keyof Settings], [type]: Number(value) }
+    }));
   };
 
-  const handleSaveSettings = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setError(null);
-    setSuccess(null);
+    if (!token) return;
     try {
-      const response = await fetch('/api/sensors/settings', {
+      const response = await fetch(`${apiUrl}/api/sensors/settings`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+          'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({ thresholds }),
+        body: JSON.stringify(settings)
       });
-      if (!response.ok) {
-        throw new Error('Failed to save settings');
-      }
-      setSuccess('Settings saved successfully!');
+      if (!response.ok) throw new Error('Failed to update settings');
+      toast.success('Settings updated successfully!');
     } catch (err: any) {
-      setError(err.message);
+      toast.error(err.message || 'Failed to update settings.');
     }
   };
 
+  if (loading) return <p>Loading settings...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Sensor Thresholds</CardTitle>
-      </CardHeader>
-      <CardContent>
-        {error && <p className="text-red-500">{error}</p>}
-        {success && <p className="text-green-500">{success}</p>}
-        <form onSubmit={handleSaveSettings}>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
-              <Label htmlFor="temperature">Temperature (°C)</Label>
-              <Input
-                id="temperature"
-                name="temperature"
-                value={thresholds.temperature}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="humidity">Humidity (%)</Label>
-              <Input
-                id="humidity"
-                name="humidity"
-                value={thresholds.humidity}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="moisture">Soil Moisture (%)</Label>
-              <Input
-                id="moisture"
-                name="moisture"
-                value={thresholds.moisture}
-                onChange={handleInputChange}
-              />
-            </div>
-            <div className="grid gap-2">
-              <Label htmlFor="co2">CO2 (ppm)</Label>
-              <Input
-                id="co2"
-                name="co2"
-                value={thresholds.co2}
-                onChange={handleInputChange}
-              />
-            </div>
-            <Button type="submit">Save Settings</Button>
+    <div className="bg-card p-4 rounded-lg shadow">
+      <h3 className="font-bold text-lg mb-4">Sensor Thresholds</h3>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-muted-foreground">Temperature (°C)</label>
+          <div className="flex gap-2 mt-1">
+            <input type="number" name="temperature.min" value={settings.temperature.min} onChange={handleChange} className="w-full p-2 rounded bg-input" placeholder="Min" />
+            <input type="number" name="temperature.max" value={settings.temperature.max} onChange={handleChange} className="w-full p-2 rounded bg-input" placeholder="Max" />
           </div>
-        </form>
-      </CardContent>
-    </Card>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-muted-foreground">Humidity (%)</label>
+          <div className="flex gap-2 mt-1">
+            <input type="number" name="humidity.min" value={settings.humidity.min} onChange={handleChange} className="w-full p-2 rounded bg-input" placeholder="Min" />
+            <input type="number" name="humidity.max" value={settings.humidity.max} onChange={handleChange} className="w-full p-2 rounded bg-input" placeholder="Max" />
+          </div>
+        </div>
+        <button type="submit" className="w-full bg-primary text-primary-foreground py-2 rounded-lg hover:bg-primary/90">Save Settings</button>
+      </form>
+    </div>
   );
 };
 
