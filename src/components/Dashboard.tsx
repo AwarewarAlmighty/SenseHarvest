@@ -140,7 +140,7 @@ const EmployeeLogCard = () => {
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
                                         <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${log.payload.name}`} />
-                                        <AvatarFallback>{log.payload.name.substring(0, 2).toUpperCase()}</AvatarFallback>
+                                        <AvatarFallback>{log.payload.name.substring(0, 2).toUpperCase() || "SAM"}</AvatarFallback>
                                     </Avatar>
                                     <span className="font-medium text-sm">{log.payload.name}</span>
                                 </div>
@@ -165,7 +165,7 @@ const EmployeeLogCard = () => {
 
 
 const InventoryInfoCard = () => {
-  const liveSensors = useWebSocket("ws://52.65.165.101:1880/ws/SenseHarvest");
+  const liveSensors = useWebSocket("wss://senseharvest.ddns.net/ws/SenseHarvest/Sensors");
     const sensors = liveSensors ?? [
         { name: 'Temperature', value: 24.5, unit: '°C', status: 'normal' },
         { name: 'Humidity', value: 68, unit: '%', status: 'warning' },
