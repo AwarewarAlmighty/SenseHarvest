@@ -1,165 +1,234 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import MainHeader from '../components/MainHeader';
 
+// Define the API URL at the top
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 interface Employee {
   _id: string;
   uid: string;
   name: string;
-  department: string;
+  role: string;
 }
 
-interface Log {
-  _id: string;
-  employeeName: string;
-  timestamp: string;
-  status: string;
-}
+type Log = {
+  uid: string;
+  payload: {
+    UID: string;
+    status: string;
+    timestamp: string;
+    name: string;
+  };
+};
 
-const EmployeesPage = () => {
+const Employees = () => {
   const { token } = useAuth();
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [logs, setLogs] = useState<Log[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [uid, setUid] = useState('');
+  const [name, setName] = useState('');
+  const [role, setRole] = useState('employee');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchData = async () => {
-      if (!token) {
-        setError("Authentication required.");
-        setLoading(false);
-        return;
-      }
-
+    const fetchEmployees = async () => {
       try {
-        setLoading(true);
-        const [employeesResponse, logsResponse] = await Promise.all([
-          fetch(`${apiUrl}/api/employees`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          }),
-          fetch(`${apiUrl}/api/employees/logs`, {
-            headers: { 'Authorization': `Bearer ${token}` }
-          })
-        ]);
-
-        if (!employeesResponse.ok || !logsResponse.ok) {
-          throw new Error('Failed to fetch data');
+        const response = await fetch(`${apiUrl}/api/employees`, { //  Use apiUrl
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch employees');
         }
-
-        const employeesData = await employeesResponse.json();
-        const logsData = await logsResponse.json();
-
-        setEmployees(employeesData);
-        setLogs(logsData);
+        const data = await response.json();
+        setEmployees(data);
       } catch (err: any) {
         setError(err.message);
-      } finally {
-        setLoading(false);
       }
     };
 
-    fetchData();
+    const fetchLogs = async () => {
+      try {
+        const response = await fetch(`${apiUrl}/api/employees/logs`, { //  Use apiUrl
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to fetch logs');
+        }
+        const data = await response.json();
+        setLogs(data);
+      } catch (err: any) {
+        setError(err.message);
+      }
+    };
+
+    if (token) {
+      fetchEmployees();
+      fetchLogs();
+    }
   }, [token]);
 
-  const handleAddEmployee = async (name: string, uid: string, department: string) => {
+  const handleAddEmployee = async (e: React.FormEvent) => {
+    e.preventDefault();
     try {
-      const response = await fetch(`${apiUrl}/api/employees`, {
+      const response = await fetch(`${apiUrl}/api/employees`, { //  Use apiUrl
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+          Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ name, uid, department })
+        body: JSON.stringify({ uid, name, role }),
       });
-      if (!response.ok) throw new Error('Failed to add employee');
+      if (!response.ok) {
+        throw new Error('Failed to add employee');
+      }
       const newEmployee = await response.json();
-      setEmployees(prev => [...prev, newEmployee]);
+      setEmployees([...employees, newEmployee]);
+      setUid('');
+      setName('');
+      setRole('employee');
     } catch (err: any) {
       setError(err.message);
     }
   };
 
   const handleDeleteEmployee = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this employee?")) return;
-    try {
-      const response = await fetch(`${apiUrl}/api/employees/${id}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
-      if (!response.ok) throw new Error('Failed to delete employee');
-      setEmployees(prev => prev.filter(e => e._id !== id));
-    } catch (err: any) {
-      setError(err.message);
+    if (window.confirm('Are you sure you want to delete this employee?')) {
+      try {
+        const response = await fetch(`${apiUrl}/api/employees/${id}`, { //  Use apiUrl
+          method: 'DELETE',
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        if (!response.ok) {
+          throw new Error('Failed to delete employee');
+        }
+        setEmployees(employees.filter((emp) => emp._id !== id));
+      } catch (err: any) {
+        setError(err.message);
+      }
     }
   };
 
-
-  if (loading) return <p>Loading...</p>;
-  if (error) return <p className="text-red-500">{error}</p>;
+  const getEmployeeStatus = (uid: string) => {
+    const employeeLogs = logs.filter((log) => log.payload.UID === uid);
+    if (employeeLogs.length === 0) {
+      return { status: 'unknown', timestamp: null };
+    }
+    const latestLog = employeeLogs.reduce((latest, current) => {
+      return new Date(current.payload.timestamp) > new Date(latest.payload.timestamp) ? current : latest;
+    });
+    return { status: latestLog.payload.status, timestamp: latestLog.payload.timestamp };
+  };
 
   return (
     <div className="min-h-screen bg-background">
-      <MainHeader />
-      <main className="container py-6">
-        <h2 className="text-3xl font-bold tracking-tight mb-6">Employees Management</h2>
-        {/* Further UI elements would go here, using the state variables */}
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="font-bold text-xl mb-3">Employee List</h3>
-            <div className="overflow-x-auto rounded-xl shadow-md bg-white dark:bg-[#1a1a1a]">
-              <table className="w-full text-sm text-left text-gray-800 dark:text-gray-200">
-                <thead className="bg-[#759b8c] text-white">
-                  <tr>
-                    <th className="p-3">Name</th>
-                    <th className="p-3">Department</th>
-                    <th className="p-3">UID</th>
-                    <th className="p-3">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {employees.map(emp => (
-                    <tr key={emp._id} className="hover:bg-[#ecfdf5] dark:hover:bg-[#222f22]">
-                      <td className="p-3">{emp.name}</td>
-                      <td className="p-3">{emp.department}</td>
-                      <td className="p-3">{emp.uid}</td>
-                      <td className="p-3">
-                        <button onClick={() => handleDeleteEmployee(emp._id)} className="text-red-500 hover:text-red-700">Delete</button>
-                      </td>
+        <MainHeader />
+        <main className="container mx-auto p-4">
+            <h1 className="text-2xl font-bold mb-4 text-foreground">Manage Employees</h1>
+            {error && <p className="text-red-500">{error}</p>}
+            <Card className="mb-4">
+                <CardHeader>
+                <CardTitle>Add New Employee</CardTitle>
+                </CardHeader>
+                <CardContent>
+                <form onSubmit={handleAddEmployee}>
+                    <div className="grid gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="uid">UID</Label>
+                        <Input
+                        id="uid"
+                        value={uid}
+                        onChange={(e) => setUid(e.target.value)}
+                        required
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="name">Name</Label>
+                        <Input
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        required
+                        />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="role">Role</Label>
+                        <select
+                        id="role"
+                        value={role}
+                        onChange={(e) => setRole(e.target.value)}
+                        className="w-full p-2 border rounded"
+                        >
+                        <option value="employee">Employee</option>
+                        <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <Button type="submit">Add Employee</Button>
+                    </div>
+                </form>
+                </CardContent>
+            </Card>
+            <Card>
+                <CardHeader>
+                <CardTitle>Employee List</CardTitle>
+                </CardHeader>
+                <CardContent>
+                <table className="w-full">
+                    <thead>
+                    <tr>
+                        <th className="text-left text-foreground">UID</th>
+                        <th className="text-left text-foreground">Name</th>
+                        <th className="text-left text-foreground">Role</th>
+                        <th className="text-left text-foreground">Status</th>
+                        <th></th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-          <div>
-            <h3 className="font-bold text-xl mb-3">Recent Logs</h3>
-            <div className="overflow-x-auto rounded-xl shadow-md bg-white dark:bg-[#1a1a1a]">
-              <table className="w-full text-sm text-left text-gray-800 dark:text-gray-200">
-                <thead className="bg-[#759b8c] text-white">
-                  <tr>
-                    <th className="p-3">Employee</th>
-                    <th className="p-3">Status</th>
-                    <th className="p-3">Time</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {logs.slice(0, 10).map(log => (
-                    <tr key={log._id} className="hover:bg-[#ecfdf5] dark:hover:bg-[#222f22]">
-                      <td className="p-3">{log.employeeName}</td>
-                      <td className="p-3">{log.status}</td>
-                      <td className="p-3">{new Date(log.timestamp).toLocaleString()}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      </main>
+                    </thead>
+                    <tbody>
+                    {employees.map((emp) => {
+                        const { status } = getEmployeeStatus(emp.uid);
+                        return (
+                        <tr key={emp._id}>
+                            <td className="text-foreground">{emp.uid}</td>
+                            <td className="text-foreground">{emp.name}</td>
+                            <td className="text-foreground">{emp.role}</td>
+                            <td className="text-foreground">
+                            <div className="flex items-center">
+                                <span
+                                className={`h-2 w-2 rounded-full mr-2 ${
+                                    status === 'accepted' ? 'bg-green-500' : 'bg-red-500'
+                                }`}
+                                ></span>
+                                {status}
+                            </div>
+                            </td>
+                            <td>
+                            <Button
+                                variant="destructive"
+                                onClick={() => handleDeleteEmployee(emp._id)}
+                            >
+                                Delete
+                            </Button>
+                            </td>
+                        </tr>
+                        );
+                    })}
+                    </tbody>
+                </table>
+                </CardContent>
+            </Card>
+        </main>
     </div>
   );
 };
 
-export default EmployeesPage;
+export default Employees;
