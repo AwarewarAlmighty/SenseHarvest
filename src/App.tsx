@@ -49,6 +49,7 @@ const ProtectedRoute = ({ children }) => {
  * The main application component. It sets up the overall layout and routing.
  * @returns {JSX.Element} The rendered App component.
  */
+console.log("VITE_API_URL from Netlify build:", import.meta.env.VITE_API_URL);
 function App() {
   const { isAuthenticated, isLoading } = useAuth();
 
