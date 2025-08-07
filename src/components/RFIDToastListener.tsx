@@ -14,7 +14,7 @@ const RFIDToastListener: React.FC = () => {
 
 
   useEffect(() => {
-    const socket = new WebSocket(import.meta.env.VITE_WS_URL);
+    const socket = new WebSocket("wss://senseharvest.ddns.net/ws/SenseHarvest/RFID");
     setWs(socket);
 
     socket.onmessage = (event) => {
