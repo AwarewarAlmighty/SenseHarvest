@@ -3,7 +3,7 @@ import axios from "axios";
 import MainHeader from "../components/MainHeader";
 
 // Define the API URL at the top
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const apiUrl = import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
 type Log = {
   uid: string;
@@ -24,8 +24,14 @@ const EmployeeLog = () => {
 
   useEffect(() => {
     axios
-      .get(`${apiUrl}/api/employees/logs`) // Use apiUrl here
-      .then((res) => setLogs(res.data))
+      .get(`${apiUrl}/employees/logs`) // Use apiUrl here
+      .then((res) => {
+          if(Array.isArray(res.data)) {
+            setLogs(res.data)
+          } else {
+            setLogs([])
+          }
+        })
       .catch((err) => console.error("Failed to load logs", err));
   }, []);
 

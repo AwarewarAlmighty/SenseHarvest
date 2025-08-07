@@ -29,7 +29,7 @@ import {
 } from "recharts";
 import { DateRange } from "react-day-picker";
 
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const apiUrl = import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
 interface DataPoint {
   timestamp: string;
@@ -77,34 +77,34 @@ const fetchSensorData = async (
   from?: Date,
   to?: Date
 ): Promise<SensorData> => {
-  let url = `${apiUrl}/api/sensors/${sensorId}?range=${range}`;
-  if (from && to) {
-    url += `&from=${from.toISOString()}&to=${to.toISOString()}`;
-  }
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch data for sensor ${sensorId}`);
-  }
-  const rawData = await response.json();
+    let url = `${apiUrl}/sensors/${sensorId}?range=${range}`;
+    if (from && to) {
+        url += `&from=${from.toISOString()}&to=${to.toISOString()}`;
+    }
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch data for sensor ${sensorId}`);
+    }
+    const rawData = await response.json();
 
-  const sensorTemplate = sensorTemplates.find(t => t.id === sensorId);
-  if (!sensorTemplate) throw new Error(`No template for sensorId: ${sensorId}`);
+    const sensorTemplate = sensorTemplates.find(t => t.id === sensorId);
+    if (!sensorTemplate) throw new Error(`No template for sensorId: ${sensorId}`);
 
-  const formattedData: DataPoint[] = rawData.map((d: any) => ({
-    timestamp: d.timestamp,
-    value: d.value,
-    label: format(new Date(d.timestamp),
-      range === "realtime" ? "HH:mm:ss" : "MMM d, HH:mm"
-    ),
-  }));
+    const formattedData: DataPoint[] = rawData.map((d: any) => ({
+        timestamp: d.timestamp,
+        value: d.value,
+        label: format(new Date(d.timestamp),
+        range === "realtime" ? "HH:mm:ss" : "MMM d, HH:mm"
+        ),
+    }));
 
-  return {
-    id: sensorId,
-    name: sensorTemplate.name,
-    unit: sensorTemplate.unit,
-    color: sensorTemplate.color,
-    data: formattedData,
-  };
+    return {
+        id: sensorId,
+        name: sensorTemplate.name,
+        unit: sensorTemplate.unit,
+        color: sensorTemplate.color,
+        data: formattedData,
+    };
 };
 
 const DataVisualization = () => {

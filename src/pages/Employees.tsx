@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import MainHeader from '../components/MainHeader';
 
 // Define the API URL at the top
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const apiUrl = import.meta.env.DEV ? '/api' : (import.meta.env.VITE_API_URL || 'http://localhost:3000');
 
 interface Employee {
   _id: string;
@@ -38,7 +38,7 @@ const Employees = () => {
   useEffect(() => {
     const fetchEmployees = async () => {
       try {
-        const response = await fetch(`${apiUrl}/api/employees`, { //  Use apiUrl
+        const response = await fetch(`${apiUrl}/employees`, { //  Use apiUrl
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -47,7 +47,11 @@ const Employees = () => {
           throw new Error('Failed to fetch employees');
         }
         const data = await response.json();
-        setEmployees(data);
+        if (Array.isArray(data)) {
+            setEmployees(data);
+        } else {
+            setEmployees([]);
+        }
       } catch (err: any) {
         setError(err.message);
       }
@@ -55,7 +59,7 @@ const Employees = () => {
 
     const fetchLogs = async () => {
       try {
-        const response = await fetch(`${apiUrl}/api/employees/logs`, { //  Use apiUrl
+        const response = await fetch(`${apiUrl}/employees/logs`, { //  Use apiUrl
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -64,7 +68,11 @@ const Employees = () => {
           throw new Error('Failed to fetch logs');
         }
         const data = await response.json();
-        setLogs(data);
+        if(Array.isArray(data)) {
+            setLogs(data);
+        } else {
+            setLogs([]);
+        }
       } catch (err: any) {
         setError(err.message);
       }
@@ -79,7 +87,7 @@ const Employees = () => {
   const handleAddEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const response = await fetch(`${apiUrl}/api/employees`, { //  Use apiUrl
+      const response = await fetch(`${apiUrl}/employees`, { //  Use apiUrl
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -103,7 +111,7 @@ const Employees = () => {
   const handleDeleteEmployee = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this employee?')) {
       try {
-        const response = await fetch(`${apiUrl}/api/employees/${id}`, { //  Use apiUrl
+        const response = await fetch(`${apiUrl}/employees/${id}`, { //  Use apiUrl
           method: 'DELETE',
           headers: {
             Authorization: `Bearer ${token}`,
