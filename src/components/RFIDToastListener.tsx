@@ -20,7 +20,7 @@ const RFIDToastListener: React.FC = () => {
 
   useEffect(() => {
     // CORRECT: Use the dedicated websocketUrl variable
-    const socket = new WebSocket(websocketUrl);
+    const socket = new WebSocket(`${websocketUrl}/RFID`);
     setWs(socket);
 
     socket.onmessage = (event) => {
