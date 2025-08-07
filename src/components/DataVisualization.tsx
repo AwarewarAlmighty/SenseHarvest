@@ -77,7 +77,7 @@ const fetchSensorData = async (
   from?: Date,
   to?: Date
 ): Promise<SensorData> => {
-  let url = `http://{apiUrl}/api/sensors/${sensorId}?range=${range}`;
+  let url = `http://${apiUrl}/api/sensors/${sensorId}?range=${range}`;
   if (from && to) {
     url += `&from=${from.toISOString()}&to=${to.toISOString()}`;
   }
