@@ -3,7 +3,12 @@ import { toast } from "react-toastify";
 import Modal from "react-modal";
 import axios from "axios";
 
-const apiUrl = import.meta.env.VITE_API_URL || "wss://senseharvest.ddns.net/ws/SenseHarvest/RFID";
+// CORRECT: API URL for HTTP requests
+const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+// CORRECT: WebSocket URL for real-time connection
+const websocketUrl = import.meta.env.VITE_WS_URL || "ws://localhost:1880/ws/SenseHarvest/RFID";
+
 
 const RFIDToastListener: React.FC = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
@@ -14,7 +19,8 @@ const RFIDToastListener: React.FC = () => {
 
 
   useEffect(() => {
-    const socket = new WebSocket("wss://senseharvest.ddns.net/ws/SenseHarvest/RFID");
+    // CORRECT: Use the dedicated websocketUrl variable
+    const socket = new WebSocket(websocketUrl);
     setWs(socket);
 
     socket.onmessage = (event) => {
@@ -39,6 +45,7 @@ const RFIDToastListener: React.FC = () => {
 
   const handleRegister = async () => {
     try {
+      // CORRECT: This correctly uses the apiUrl for the HTTP POST request
       await axios.post(`${apiUrl}/api/employees`, {
         uid: registerUID,
         name,
