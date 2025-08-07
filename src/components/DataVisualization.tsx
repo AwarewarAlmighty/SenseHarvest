@@ -77,15 +77,7 @@ const fetchSensorData = async (
   from?: Date,
   to?: Date
 ): Promise<SensorData> => {
-<<<<<<< Updated upstream
-  let url = `http://${apiUrl}/api/sensors/${sensorId}?range=${range}`;
-=======
-<<<<<<< HEAD
   let url = `${apiUrl}/api/sensors/${sensorId}?range=${range}`;
-=======
-  let url = `http://${apiUrl}/api/sensors/${sensorId}?range=${range}`;
->>>>>>> 6276601e86a73dbb4af0534f4e36c223cfb9e0de
->>>>>>> Stashed changes
   if (from && to) {
     url += `&from=${from.toISOString()}&to=${to.toISOString()}`;
   }
