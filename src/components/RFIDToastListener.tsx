@@ -3,7 +3,7 @@ import { toast } from "react-toastify";
 import Modal from "react-modal";
 import axios from "axios";
 
-const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const apiUrl = import.meta.env.VITE_API_URL || "wss://senseharvest.ddns.net/ws/SenseHarvest/RFID";
 
 const RFIDToastListener: React.FC = () => {
   const [ws, setWs] = useState<WebSocket | null>(null);
@@ -14,7 +14,7 @@ const RFIDToastListener: React.FC = () => {
 
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:1880/ws/SenseHarvest/RFID");
+    const socket = new WebSocket(import.meta.env.VITE_WS_URL);
     setWs(socket);
 
     socket.onmessage = (event) => {
