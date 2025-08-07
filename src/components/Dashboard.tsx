@@ -10,7 +10,8 @@ import {
 import DataVisualization from "./DataVisualization";
 import NotificationCenter from "./NotificationCenter";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { ArrowRight, Thermometer, Droplets, Wind } from "lucide-react";
+// CORRECTED LINE: Added Mountain to the import list
+import { ArrowRight, Thermometer, Droplets, Wind, Mountain, Sun, Cloud, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import useWebSocket from "../hooks/useWebSocket";
@@ -18,7 +19,7 @@ import { Badge } from "@/components/ui/badge";
 import MainHeader from "./MainHeader";
 import axios from 'axios';
 
-// --- Define API URL for all HTTP requests ---
+// Define API URL for all HTTP requests
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 // --- Card Components ---
@@ -37,7 +38,6 @@ const InventoryOverviewCard = () => {
     useEffect(() => {
         const fetchInventoryStats = async () => {
             try {
-                // CORRECT: Use the apiUrl variable
                 const response = await axios.get(`${apiUrl}/api/inventory`);
                 const items: InventoryItem[] = response.data;
 
@@ -117,7 +117,6 @@ const EmployeeLogCard = () => {
     useEffect(() => {
         const fetchLogs = async () => {
             try {
-                // CORRECT: Use the apiUrl variable
                 const response = await axios.get(`${apiUrl}/api/employees/logs`);
                 const sortedLogs = response.data.sort((a: Log, b: Log) => new Date(b.payload.timestamp).getTime() - new Date(a.payload.timestamp).getTime());
                 setLogs(sortedLogs.slice(0, 2));
@@ -170,7 +169,6 @@ const EmployeeLogCard = () => {
 
 
 const InventoryInfoCard = () => {
-  // CORRECT: Use environment variable for WebSocket URL
   const websocketUrl = import.meta.env.VITE_WS_URL || "ws://localhost:1880/ws/SenseHarvest/Sensors";
   const liveSensors = useWebSocket(websocketUrl);
     const sensors = liveSensors ?? [
