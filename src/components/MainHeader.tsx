@@ -1,10 +1,28 @@
-import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, NavLink } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { ModeToggle } from "./theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Bell, Settings, LogOut, Sun, Cloud, Zap, CloudFog, CloudRain, Snowflake, Wind, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
+import {
+  Bell,
+  Settings,
+  LogOut,
+  Sun,
+  Cloud,
+  Zap,
+  CloudFog,
+  CloudRain,
+  Snowflake,
+  Wind,
+  MapPin,
+  Menu,
+  Monitor,
+  Home,
+  Users,
+  UserCheck,
+} from "lucide-react";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
@@ -13,7 +31,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-
+import { cn } from "@/lib/utils";
 
 // --- Weather Component with Live, User-configurable Data ---
 const WeatherHeader = () => {
@@ -182,7 +200,54 @@ const MainHeader = () => {
     return (
         <header className="sticky top-0 z-10 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
             <div className="container flex h-16 items-center justify-between">
-            <WeatherHeader />
+                 {/* Mobile Navigation */}
+                 <div className="md:hidden">
+                    <Sheet>
+                        <SheetTrigger asChild>
+                            <Button variant="ghost" size="icon">
+                                <Menu className="h-5 w-5" />
+                            </Button>
+                        </SheetTrigger>
+                        <SheetContent side="left" className="w-[240px] p-4">
+                            <nav className="flex flex-col space-y-2">
+                                <SheetClose asChild>
+                                    <NavLink to="/" className={({ isActive }) => cn(buttonVariants({ variant: isActive ? "secondary" : "ghost" }), "w-full justify-start")}>
+                                        <Monitor className="mr-2 h-4 w-4" /> Dashboard
+                                    </NavLink>
+                                </SheetClose>
+                                <SheetClose asChild>
+                                    <NavLink to="/inventory" className={({ isActive }) => cn(buttonVariants({ variant: isActive ? "secondary" : "ghost" }), "w-full justify-start")}>
+                                        <Home className="mr-2 h-4 w-4" /> Inventory
+                                    </NavLink>
+                                </SheetClose>
+                                {user?.role === "admin" && (
+                                    <>
+                                        <SheetClose asChild>
+                                            <NavLink to="/employees" className={({ isActive }) => cn(buttonVariants({ variant: isActive ? "secondary" : "ghost" }), "w-full justify-start")}>
+                                                <Users className="mr-2 h-4 w-4" /> Employees
+                                            </NavLink>
+                                        </SheetClose>
+                                        <SheetClose asChild>
+                                            <NavLink to="/admin-approval" className={({ isActive }) => cn(buttonVariants({ variant: isActive ? "secondary" : "ghost" }), "w-full justify-start")}>
+                                                <UserCheck className="mr-2 h-4 w-4" /> Approval
+                                            </NavLink>
+                                        </SheetClose>
+                                    </>
+                                )}
+                                <SheetClose asChild>
+                                    <NavLink to="/EmployeesLogs" className={({ isActive }) => cn(buttonVariants({ variant: isActive ? "secondary" : "ghost" }), "w-full justify-start")}>
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-id-card-lanyard-icon lucide-id-card-lanyard mr-2 h-4 w-4"><path d="M13.5 8h-3"/><path d="m15 2-1 2h3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3"/><path d="M16.899 22A5 5 0 0 0 7.1 22"/><path d="m9 2 3 6"/><circle cx="12" cy="15" r="3"/>
+                                        </svg> Logs
+                                    </NavLink>
+                                </SheetClose>
+                            </nav>
+                        </SheetContent>
+                    </Sheet>
+                </div>
+
+                <div className="hidden md:flex">
+                  <WeatherHeader />
+                </div>
             <div className="flex items-center gap-4">
                 <ModeToggle />
 

@@ -124,7 +124,7 @@ export default function Inventory() {
             Manage your farm's inventory in real-time.
           </p>
         </div>
-        <div className="flex gap-2 mb-4 items-center">
+        <div className="flex flex-wrap gap-2 mb-4 items-center">
           <input
             type="text"
             value={searchTerm}
