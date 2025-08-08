@@ -144,7 +144,7 @@ const EmployeeLogCard = () => {
                                 <div className="flex items-center gap-3">
                                     <Avatar className="h-8 w-8">
                                         <AvatarImage src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${log.payload.name}`} />
-                                        <AvatarFallback>{log.payload.name.substring(0, 2).toUpperCase() || "SAM"}</AvatarFallback>
+                                        <AvatarFallback>{(log.payload.name ? log.payload.name.substring(0, 2).toUpperCase() : '') || "SAM"}</AvatarFallback>
                                     </Avatar>
                                     <span className="font-medium text-sm">{log.payload.name}</span>
                                 </div>
