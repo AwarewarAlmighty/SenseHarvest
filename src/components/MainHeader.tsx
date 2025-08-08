@@ -260,7 +260,7 @@ const MainHeader = () => {
                   </Button>
                 </Link>
 
-                <DropdownMenu>
+{/*                 <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                     <Button variant="ghost" size="icon">
                     <Settings className="h-5 w-5" />
@@ -272,7 +272,7 @@ const MainHeader = () => {
                     </Link>
                     <DropdownMenuItem>Help</DropdownMenuItem>
                 </DropdownMenuContent>
-                </DropdownMenu>
+                </DropdownMenu> */}
 
                 <DropdownMenu>
                 <DropdownMenuTrigger asChild>
