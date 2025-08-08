@@ -181,7 +181,7 @@ const Sidebar = () => {
           <User className={cn("h-4 w-4", isOpen && "mr-2")} />
           {isOpen && <span className="whitespace-nowrap">Profile</span>}
         </NavLink>
-        <NavLink
+{/*         <NavLink
           to="/settings"
           className={({ isActive }) =>
             cn(
@@ -193,7 +193,7 @@ const Sidebar = () => {
         >
           <Settings className={cn("h-4 w-4", isOpen && "mr-2")} />
           {isOpen && <span className="whitespace-nowrap">Settings</span>}
-        </NavLink>
+        </NavLink> */}
       </nav>
 
       {/* Sidebar Toggle */}
