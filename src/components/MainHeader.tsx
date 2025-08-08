@@ -285,12 +285,12 @@ const MainHeader = () => {
                     </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-{/*                     <Link to="/profile">
+                    <Link to="/profile">
                       <DropdownMenuItem>Profile</DropdownMenuItem>
                     </Link>
                     <Link to="/settings">
                       <DropdownMenuItem>Account Settings</DropdownMenuItem>
-                    </Link> */}
+                    </Link>
                     <DropdownMenuItem onClick={logout} className="text-red-500">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
