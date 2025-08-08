@@ -33,6 +33,24 @@ SenseHarvest is a full-stack web application designed for monitoring and managin
 - **Passport.js:** Authentication middleware for Node.js.
 - **JWT:** For implementing JSON Web Tokens for secure authentication.
 
+## Hardware
+
+This project integrates with the following IoT hardware components:
+
+-   Soil Sensor
+-   RFID Sensor
+-   Temperature and Humidity Sensor
+-   Gas Sensor
+-   Buzzer
+-   4x LEDs for status indication
+
+## Project Structure
+
+The project is organized into two main directories:
+
+-   **`/server`**: Contains the backend application built with Node.js and Express. It handles the API endpoints, database interactions, and user authentication.
+-   **`/src`**: Contains the frontend application built with React and Vite. It includes all the UI components, pages, and client-side logic.
+
 ## Getting Started
 
 These instructions will get you a copy of the project up and running on your local machine for development and testing purposes.
@@ -109,3 +127,28 @@ The application should now be running at `http://localhost:5173`.
 -   `npm start`: Starts the Node.js server.
 -   `npm run monitor`: Runs the monitoring script.
 -   `npm run add-admin`: Runs a script to add a new admin user.
+
+## Deployment
+
+To deploy SenseHarvest, you will need to deploy the frontend and backend applications separately.
+
+-   **Backend**: The `server` directory can be deployed to any platform that supports Node.js applications, such as Heroku, AWS, or a DigitalOcean Droplet.
+-   **Frontend**: The `src` directory can be built using `npm run build` and the resulting `dist` folder can be deployed to any static hosting provider like Netlify, Vercel, or GitHub Pages.
+
+Make sure to configure the environment variables on your deployment platforms accordingly.
+
+## Contributing
+
+Contributions are welcome! If you have any ideas, suggestions, or bug reports, please open an issue on the GitHub repository.
+
+If you would like to contribute code, please follow these steps:
+
+1.  Fork the repository.
+2.  Create a new branch for your feature or bug fix.
+3.  Make your changes and commit them with a descriptive message.
+4.  Push your changes to your forked repository.
+5.  Open a pull request to the main repository.
+
+## License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
