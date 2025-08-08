@@ -237,8 +237,7 @@
 // };
 
 // export default NotificationCenter;
-
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Bell,
   CheckCircle,
@@ -252,7 +251,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { ScrollArea } from "./ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { useAuth } from "../context/AuthContext";
-import useWebSocket from "../hooks/useWebSocket"; // Your custom hook
+import useWebSocket from "../hooks/useWebSocket";
 
 interface Notification {
   _id: string;
@@ -260,12 +259,10 @@ interface Notification {
   description: string;
   createdAt: string;
   severity: "info" | "warning" | "critical";
-  read: boolean;
   action?: string;
 }
 
 const websocketUrl = import.meta.env.VITE_WS_URL || "wss://senseharvest.ddns.net/ws/SenseHarvest";
-// Define API URL for all HTTP requests, similar to Dashboard.tsx
 const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
 const NotificationCenter: React.FC = () => {
@@ -275,79 +272,61 @@ const NotificationCenter: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<string>("all");
 
-  // Your custom useWebSocket hook returns the parsed data directly (or null initially)
   const receivedWebSocketData = useWebSocket(`${websocketUrl}/Sensors`);
 
-  // Handle incoming WebSocket messages
-  useEffect(() => {
-    // Check if any data was received from the WebSocket hook and if it's an array
-    if (receivedWebSocketData && Array.isArray(receivedWebSocketData)) {
-      console.log("--- WebSocket Message Received ---");
-      console.log("Parsed sensorData from hook (Array):", receivedWebSocketData);
-
-      const newLiveNotifications: Notification[] = [];
-      receivedWebSocketData.forEach((sensorData: any) => { // Iterate over each sensor object in the array
-        console.log("Processing individual sensorData:", sensorData);
-        console.log("Individual SensorData status:", sensorData.status);
-
-        // Only create notification if status is critical or warning for live updates
-        if (sensorData.status === 'critical' || sensorData.status === 'warning') {
-          const newNotification: Notification = {
-            _id: `ws-${sensorData.id || new Date().getTime()}-${Math.random()}`, // Use sensor ID if available, else generate
-            title: `Live Sensor: ${sensorData.name || sensorData.sensorId || 'Unknown'}`, // Use 'name' or 'sensorId'
-            description: `Value: ${sensorData.value || 'N/A'}, Status: ${sensorData.status || 'normal'}`,
-            createdAt: sensorData.lastUpdated || new Date().toISOString(), // Use lastUpdated if available
-            severity: (sensorData.status as "info" | "warning" | "critical") || "info",
-            read: false, // Live notifications are initially unread
-          };
-          newLiveNotifications.push(newNotification);
-          console.log("Potential live notification:", newNotification.title);
-        } else {
-          console.log(`Live sensor data for ${sensorData.name || sensorData.sensorId} is 'normal', not adding as a notification.`);
-        }
-      });
-
-      // Limit to the latest 3 live notifications (assuming receivedWebSocketData is already ordered by time)
-      const limitedLiveNotifications = newLiveNotifications.slice(0, 3);
-      
-      // Update state, ensuring live notifications are at the top and limited
-      setNotifications((prevNotifications) => {
-        // Filter out old WebSocket notifications to only keep the latest 3
-        const existingHistoricalNotifications = prevNotifications.filter(n => !n._id.startsWith('ws-'));
-        return [...limitedLiveNotifications, ...existingHistoricalNotifications].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-      });
-
-      console.log("--- End WebSocket Message Processing ---");
-    } else if (receivedWebSocketData) {
-        // This block handles cases where the WebSocket might send a single object, not an array
-        console.log("--- WebSocket Message Received (Single Object) ---");
-        console.log("Parsed sensorData from hook (Single Object):", receivedWebSocketData);
-        console.log("SensorData status:", receivedWebSocketData.status);
-
-        if (receivedWebSocketData.status === 'critical' || receivedWebSocketData.status === 'warning') {
-            const newNotification: Notification = {
-                _id: `ws-${receivedWebSocketData.id || new Date().getTime()}-${Math.random()}`,
-                title: `Live Sensor: ${receivedWebSocketData.name || receivedWebSocketData.sensorId || 'Unknown'}`,
-                description: `Value: ${receivedWebSocketData.value || 'N/A'}, Status: ${receivedWebSocketData.status || 'normal'}`,
-                createdAt: receivedWebSocketData.lastUpdated || new Date().toISOString(),
-                severity: (receivedWebSocketData.status as "info" | "warning" | "critical") || "info",
-                read: false,
-            };
-            // For a single object, we replace the previous live notifications with this new one, if it's one of the top 3
-            setNotifications((prevNotifications) => {
-                const existingHistoricalNotifications = prevNotifications.filter(n => !n._id.startsWith('ws-'));
-                // Add the new notification and ensure it's at the top if it's within the latest 3
-                return [newNotification, ...existingHistoricalNotifications].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 3 + existingHistoricalNotifications.length); // Keep 3 live + historical
-            });
-            console.log("Notification added from WebSocket (single object):", newNotification.title);
-        } else {
-            console.log(`Live sensor data (single object) is 'normal', not adding as a notification.`);
-        }
-        console.log("--- End WebSocket Message Processing (Single Object) ---");
-    } else {
-        console.log("No new WebSocket data yet (receivedWebSocketData is null/undefined).");
+  const postNotification = useCallback(async (newNotificationData) => {
+    if (!token) {
+      console.error("No token available to post notification.");
+      return;
     }
-  }, [receivedWebSocketData]); // Depend on receivedWebSocketData to react to new messages
+    try {
+      const response = await fetch(`${apiUrl}/api/events`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newNotificationData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to post new event.");
+      }
+      const postedEvent = await response.json();
+      console.log("New event posted successfully:", postedEvent);
+      
+      setNotifications((prevNotifications) => {
+        const updatedNotifications = [postedEvent, ...prevNotifications];
+        const sortedNotifications = updatedNotifications.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        return sortedNotifications.slice(0, 3);
+      });
+    } catch (err) {
+      console.error("Error posting new notification:", err);
+      setError("Failed to post new notification");
+    }
+  }, [token]);
+
+  useEffect(() => {
+    if (receivedWebSocketData) {
+      const sensorDataArray = Array.isArray(receivedWebSocketData)
+        ? receivedWebSocketData
+        : [receivedWebSocketData];
+
+      sensorDataArray.forEach((sensorData) => {
+        if (sensorData.status === 'critical' || sensorData.status === 'warning') {
+          const newNotification = {
+            title: `Live Sensor Alert: ${sensorData.name || sensorData.sensorId || 'Unknown'}`,
+            description: `Value: ${sensorData.value || 'N/A'}, Status: ${sensorData.status || 'normal'}`,
+            createdAt: sensorData.lastUpdated || new Date().toISOString(),
+            severity: sensorData.status,
+          };
+          postNotification(newNotification);
+        }
+      });
+    }
+  }, [receivedWebSocketData, postNotification]);
 
   useEffect(() => {
     const fetchHistoricalNotifications = async () => {
@@ -356,30 +335,19 @@ const NotificationCenter: React.FC = () => {
         console.log("No authentication token available for fetching historical data.");
         return;
       }
-      console.log("Attempting to fetch historical notifications...");
       try {
-        // Use direct fetch with apiUrl, similar to Dashboard.tsx
-        const response = await fetch(`${apiUrl}/api/events`, {
+        const response = await fetch(`${apiUrl}/api/events?limit=3`, {
           headers: { Authorization: `Bearer ${token}` },
         });
-        
+
         if (!response.ok) {
           const errorText = await response.text();
           throw new Error(`Failed to fetch notifications: ${response.status} ${response.statusText} - ${errorText}`);
         }
-
-        const data: Notification[] = await response.json(); // Parse JSON response
+        const data: Notification[] = await response.json();
         console.log("Historical notifications fetched successfully:", data);
 
-        setNotifications((prevNotifications) => {
-          // Filter out any potential duplicates between live and historical data
-          const existingIds = new Set(prevNotifications.map(n => n._id));
-          const newHistoricalNotifications = data.filter((n: Notification) => !existingIds.has(n._id));
-          
-          // Combine current live notifications (if any) and new historical, then sort
-          const currentLiveNotifications = prevNotifications.filter(n => n._id.startsWith('ws-'));
-          return [...currentLiveNotifications, ...newHistoricalNotifications].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        });
+        setNotifications(data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
       } catch (err: any) {
         console.error("Error fetching historical notifications:", err);
         setError(err.message || "Failed to fetch historical notifications");
@@ -388,12 +356,10 @@ const NotificationCenter: React.FC = () => {
       }
     };
     fetchHistoricalNotifications();
-  }, [token]); // Re-fetch if token changes
+  }, [token]);
 
   const handleClearAll = async () => {
-    console.log("Attempting to clear historical notifications...");
     try {
-      // Use direct fetch with apiUrl for clearing historical data
       const response = await fetch(`${apiUrl}/api/events`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -405,9 +371,7 @@ const NotificationCenter: React.FC = () => {
       }
       
       console.log("Historical notifications cleared successfully.");
-      setNotifications(prevNotifications =>
-        prevNotifications.filter(n => n._id.startsWith('ws-')) // Keep only WebSocket-originated notifications
-      );
+      setNotifications([]);
     } catch (err: any) {
       console.error("Error clearing notifications:", err);
       setError(err.message || "Failed to clear notifications");
@@ -498,10 +462,10 @@ const NotificationCenter: React.FC = () => {
                       key={notification._id}
                       className={`p-3 rounded-lg border ${
                         notification.severity === "critical"
-                          ? "border-destructive/30 bg-red-50"
+                          ? "border-destructive/30"
                           : notification.severity === "warning"
-                          ? "border-amber-500/30 bg-yellow-50"
-                          : "border-green-500/30 bg-green-50"
+                          ? "border-amber-500/30"
+                          : "border-green-500/30"
                       }`}
                     >
                       <div className="flex justify-between items-start">
