@@ -25,7 +25,7 @@ const EmployeeLog = () => {
 
   useEffect(() => {
     axios
-      .get(`${apiUrl}/api/logs`) // CORRECTED: The endpoint is /api/logs
+      .get(`${apiUrl}/api/employees/logs`) 
       .then((res) => {
           if(Array.isArray(res.data)) {
             // Sort logs by timestamp in descending order

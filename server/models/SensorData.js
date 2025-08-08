@@ -1,10 +1,24 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
-const SensorDataSchema = new mongoose.Schema({
-  topic: String,
-  payload: {
-    value: Number,
+const sensorDataSchema = new mongoose.Schema({
+  timestamp: {
+    type: Date,
+    default: Date.now,
   },
-}, { timestamps: true });
+  sensorId: {
+    type: String,
+    required: true,
+  },
+  value: {
+    type: mongoose.Schema.Types.Mixed, // Can be a number, string, etc.
+    required: true,
+  },
+  status: {
+    type: String,
+    enum: ["normal", "warning", "critical"],
+    required: true,
+  },
+  // Add other fields as needed, e.g., location, type, etc.
+});
 
-export const SensorData = mongoose.model("SensorData", SensorDataSchema);
+module.exports = mongoose.model("SensorData", sensorDataSchema);
